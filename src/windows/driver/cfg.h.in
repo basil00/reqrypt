@@ -1,0 +1,64 @@
+/*
+ * cfg.h.in
+ * (C) 2010, all rights reserved,
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+#ifndef __CFG_H
+#define __CFG_H
+
+/*
+ * Names:
+ */
+#define PACKAGE_NAME            "@PACKAGE_NAME@"
+#define PACKAGE_NAME_LONG       "@PACKAGE_NAME_LONG@"
+
+/*
+ * The driver's name.
+ */
+#define DRIVER_NAME             L"@PACKAGE_NAME_LONG@Driver"
+
+/*
+ * The driver's filename.
+ */
+#define DRIVER_FILENAME         "@PACKAGE_NAME@_driver.sys"
+
+/*
+ * Device name.
+ */
+#define DRIVER_DEVICE           L"\\Device\\@PACKAGE_NAME_LONG@Device"
+#define DRIVER_DOS_DEVICE       L"\\DosDevices\\@PACKAGE_NAME_LONG@Device"
+
+/*
+ * Driver disk path.
+ */
+#define DRIVER_PATH             \
+    "C:\\Program Files\\@PACKAGE_NAME_LONG@\\@PACKAGE_NAME@_driver\\"
+#define DRIVER_INF_PATH         \
+    "C:\\Program Files\\@PACKAGE_NAME_LONG@\\@PACKAGE_NAME@_driver\\@PACKAGE_NAME@_driver.inf"
+#define DRIVER_M_INF_PATH       \
+    "C:\\Program Files\\@PACKAGE_NAME_LONG@\\@PACKAGE_NAME@_driver\\@PACKAGE_NAME@_driver_m.inf"
+
+/*
+ * Driver ID
+ */
+#define DRIVER_ID               L"@PACKAGE_NAME@_driver"
+
+/*
+ * Driver installer name
+ */
+#define DRIVER_INSTALLER_NAME   L"@PACKAGE_NAME@_driver installer"
+
+#endif      /* __CFG_H */

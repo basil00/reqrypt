@@ -1,0 +1,202 @@
+body.style
+{
+    background-color: #000000;
+}
+
+h1.title
+{
+    color: #6666dd;
+    font-size: 320%;
+    font-family: sans-serif;
+}
+
+div.ie
+{
+    color: #ffffff;
+    background-color: #aa0000;
+    font-weight: bold;
+    padding: 3px;
+}
+
+a.browser
+{
+    color: #ffff55;
+    text-decoration: none;
+}
+
+div.wrap
+{
+    width: 800px;
+    height: 1200px;
+    margin: 1em auto 1em auto;
+}
+
+div.tabs
+{
+    padding: 0 0 0 1em;
+}
+
+a.tab
+{
+    background-color: #4444bb;
+    color: #ffffff;
+    margin: 0 0.2em 0 0;
+    padding: 2px 1em 2px 1em;
+    text-decoration: none;
+    -moz-border-radius-topright: 7px;
+    -moz-border-radius-topleft: 7px;
+    -webkit-border-top-right-radius: 7px;
+    -webkit-border-top-left-radius: 7px;
+    position: relative;
+    top: -1px;
+    z-index: 10;
+}
+
+a.tab:hover
+{
+    background-color: #5555cc;
+}
+
+a.tab.active, a.tab.active:hover
+{
+    color: #ffffff;
+    background-color: #7777ee;
+    z-index: 12;
+}
+
+div.main
+{
+    color: #ffffff;
+    background-color: #7777ee;
+    padding: 1em;
+    position: relative;
+    z-index: 11;
+}
+
+div.exit
+{
+    position: relative;
+    float: right;
+    font-size: 65%;
+    top: -1em;
+}
+
+a.exit:hover
+{
+    background-color: #9999ff;
+}
+
+a.exit
+{
+    color: #ffffff;
+    text-decoration: none;
+}
+
+iframe.log
+{
+    background-color: #ddddff;
+}
+
+span.error
+{
+    color: #aa0000;
+}
+
+span.panic
+{
+    color: #aa0000;
+}
+
+span.warning
+{
+    color: #aaaa00;
+}
+
+span.log
+{
+    color: #00aa00;
+}
+
+div.log
+{
+    color: #111111;
+    font-family: monospace;
+}
+
+div.group
+{
+    padding: 5px 0px 5px 0px;
+}
+
+div.option, div.option_hdr
+{
+    padding: 2px 1em 3px 1em;
+    border: 1px outset #ffffff;
+    color: #000000;
+    background-color: #ddddff;
+    font-family: sans-serif;
+    font-weight: normal;
+}
+
+div.option_hdr
+{
+    color: #ffffff;
+    background-color: #ffffdd;
+    font-weight: bold;
+}
+
+div.option_box
+{
+    background-color: #6666dd;
+    color: #ffffff;
+    padding: 10px 10px 10px 10px;
+    -moz-border-radius: 7px;
+    -webkit-border-radius: 7px;
+}
+
+div.option:hover
+{
+    background-color: #eeeeee;
+}
+
+div.label
+{
+    float: left;
+}
+
+div.input
+{
+    text-align: right;
+}
+
+select.input
+{
+}
+
+select.url_select
+{
+    background-color: #ddddff;
+    width: 100%;
+    overflow: auto;
+}
+
+textarea.license
+{
+    color: #000000;
+    background-color: #ffffff;
+}
+
+div.question
+{
+    font-weight: bold;
+    background-color: #dddd99;
+}
+
+div.answer
+{
+    font-size: 93%;
+    background-color: #eeeeff;
+    margin: 0 0 0 1em;
+    padding: 0 1em 0 0;
+}
+

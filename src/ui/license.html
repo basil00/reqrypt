@@ -1,0 +1,38 @@
+<!doctype html>
+<html>
+<head>
+ $INCLUDE(head.html)
+</head>
+<body class="style" onLoad="doLoad()">
+<div class="wrap">
+ $INCLUDE(ie.html)
+ <h1 class="title">
+  <embed src="logo.svg" width="48" height="48">&nbsp;$PROGRAM
+ </h1>
+ $INCLUDE(tabs.html)
+ <div class="main">
+  $INCLUDE(exit.html)
+  <small>
+   LICENSE:
+  </small>
+  <div class="option">
+   <p>
+    <center>
+     This program is distributed under the 
+     <a href="http://www.gnu.org/licenses/gpl-3.0.txt">GNU GPL VERSION 3</a>:
+    </center>
+   </p>
+   <p>
+    <center>
+     <textarea readonly="true" rows="30" cols="80" class="license">
+$INCLUDE(gpl3.txt)
+     </textarea>
+    </center>
+   </p>
+  </div>
+ </div>
+ <form name="license">
+ </form>
+</div>
+</body>
+</html>

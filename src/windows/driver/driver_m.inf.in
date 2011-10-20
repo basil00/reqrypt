@@ -1,0 +1,55 @@
+[Version]
+signature  = "$Windows NT$"
+Class      = Net
+ClassGUID  = {4d36e972-e325-11ce-bfc1-08002be10318}
+Provider   = %@PACKAGE_NAME_LONG@%
+DriverVer  = 02/01/2011,0.0.0.0
+
+[ControlFlags]
+ExcludeFromSelect = @PACKAGE_NAME@_drivermp
+
+[DestinationDirs]
+DefaultDestDir=12
+
+[Manufacturer]
+%@PACKAGE_NAME_LONG@% = @PACKAGE_NAME_LONG@,NTx86,NTia64,NTamd64
+
+[@PACKAGE_NAME_LONG@]
+%@PACKAGE_NAME_LONG@DriverMP_Desc% = @PACKAGE_NAME_LONG@DriverMP.ndi, @PACKAGE_NAME@_drivermp
+
+[@PACKAGE_NAME_LONG@.NTx86]
+%@PACKAGE_NAME_LONG@DriverMP_Desc% = @PACKAGE_NAME_LONG@DriverMP.ndi, @PACKAGE_NAME@_drivermp
+
+[@PACKAGE_NAME_LONG@.NTia64]
+%@PACKAGE_NAME_LONG@DriverMP_Desc% = @PACKAGE_NAME_LONG@DriverMP.ndi, @PACKAGE_NAME@_drivermp
+
+[@PACKAGE_NAME_LONG@.NTamd64]
+%@PACKAGE_NAME_LONG@DriverMP_Desc% = @PACKAGE_NAME_LONG@DriverMP.ndi, @PACKAGE_NAME@_drivermp
+
+[@PACKAGE_NAME_LONG@DriverMP.ndi]
+AddReg          = @PACKAGE_NAME_LONG@DriverMP.ndi.AddReg
+Characteristics = 0x29  ; NCF_NOT_USER_REMOVABLE | NCF_VIRTUAL | NCF_HIDDEN
+
+[@PACKAGE_NAME_LONG@DriverMP.ndi.AddReg]
+HKR, Ndi, Service,  0,  @PACKAGE_NAME_LONG@DriverMP
+
+[@PACKAGE_NAME_LONG@DriverMP.ndi.Services]
+AddService = @PACKAGE_NAME_LONG@DriverMP,0x2, @PACKAGE_NAME_LONG@DriverMP.AddService
+
+[@PACKAGE_NAME_LONG@DriverMP.AddService]
+ServiceType   = 1   ; SERVICE_KERNEL_DRIVER
+StartType     = 3   ; SERVICE_DEMAND_START
+ErrorControl  = 1   ; SERVICE_ERROR_NORMAL
+ServiceBinary = %12%\@PACKAGE_NAME@_driver.sys
+AddReg        = @PACKAGE_NAME_LONG@DriverMP.AddService.AddReg
+
+[@PACKAGE_NAME_LONG@DriverMP.AddService.AddReg]
+
+[Strings]
+@PACKAGE_NAME_LONG@ = "@PACKAGE_NAME_LONG@ Project"
+@PACKAGE_NAME_LONG@DriverMP_Desc = "@PACKAGE_NAME_LONG@ Driver Miniport"
+
+[SourceDisksNames]
+
+[SourceDisksFiles]
+

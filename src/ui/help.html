@@ -1,0 +1,26 @@
+<!doctype html>
+<html>
+<head>
+ $INCLUDE(head.html)
+</head>
+<body class="style" onLoad="doLoad()">
+<div class="wrap">
+ $INCLUDE(ie.html)
+ <h1 class="title">
+  <embed src="logo.svg" width="48" height="48">&nbsp;$PROGRAM
+ </h1>
+ $INCLUDE(tabs.html)
+ <div class="main" id="help">
+  $INCLUDE(exit.html)
+  <form name="help">
+   <small>
+    HELP:
+   </small>
+   <iframe src="help-contents.html" width="100%" height="500">
+    (cannot display help contents: your browser does not support iframes)
+   </iframe>
+  </form>
+ </div>
+</div>
+</body>
+</html>

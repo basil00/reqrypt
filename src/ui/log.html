@@ -1,0 +1,53 @@
+<!doctype html>
+<html>
+<head>
+ $INCLUDE(head.html)
+</head>
+<body class="style" onLoad="doLoad()">
+<div class="wrap">
+ $INCLUDE(ie.html)
+ <h1 class="title">
+  <embed src="logo.svg" width="48" height="48">&nbsp;$PROGRAM
+ </h1>
+ $INCLUDE(tabs.html)
+ <div class="main" id="log">
+  $INCLUDE(exit.html)
+  <small>
+   MESSAGES:
+  </small>
+  <iframe src="log-frame.html" width="100%" height="400" id="log_display"
+          class="log">
+   <p>
+    (cannot display log file: your browser does not support iframes)
+   </p>
+  </iframe>
+  <form name="log">
+   <div class="option">
+    <div class="label">
+     Display messages?
+    </div>
+    <div class="input">
+     <select class="input" title="Select what messages to display."
+             name="log_level" onChange="doSubmit()">
+      <option title="Enable all messages." value="all">
+       All messages
+      </option>
+      <option title="Enable packet &amp; warning messages only."
+              value="packets">
+       Packets &amp; warnings
+      </option>
+      <option title="Enable warning messages only." value="warnings">
+       Warnings
+      </option>
+      <option title="Disable all messages." value="none">
+       No messages
+      </option>
+     </select>
+    </div>
+   </div>
+  </form>
+ </div>
+ $INCLUDE(state.html)
+</div>
+</body>
+</html>

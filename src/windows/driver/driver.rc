@@ -1,0 +1,11 @@
+#include <windows.h>
+#include <ntverp.h>
+#include "cfg.h"
+#define	VER_FILETYPE	VFT_DRV
+#define	VER_FILESUBTYPE	VFT2_DRV_NETWORK
+#define VER_FILEDESCRIPTION_STR     \
+    PACKAGE_NAME_LONG " Intermediate Miniport Driver"
+#define VER_INTERNALNAME_STR        DRIVER_FILENAME
+#define VER_ORIGINALFILENAME_STR    DRIVER_FILENAME
+#define VER_LANGNEUTRAL
+#include "common.ver"

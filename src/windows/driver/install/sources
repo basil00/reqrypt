@@ -1,0 +1,19 @@
+TARGETNAME=install
+TARGETTYPE=PROGRAM
+
+C_DEFINES=-DWIN32
+UMTYPE=console
+UMENTRY=main
+RCOPTIONS=-N
+USE_MSVCRT=1
+
+TARGETLIBS= $(SDK_LIB_PATH)\ole32.lib \
+            $(SDK_LIB_PATH)\setupapi.lib \
+            $(SDK_LIB_PATH)\uuid.lib
+
+INCLUDES=$(DDK_INC_PATH)
+
+SOURCES=install.cpp
+MUI=0
+MUI_COMMENT=MUI is disabled. owners need to enable it with resource manifest if it is required or contact MUICore to get new comment and comment code 
+

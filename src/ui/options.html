@@ -1,0 +1,166 @@
+<!doctype html>
+<html>
+<head>
+ $INCLUDE(head.html)
+</head>
+<body class="style" onLoad="doLoad()">
+<div class="wrap">
+ $INCLUDE(ie.html)
+ <h1 class="title">
+  <embed src="logo.svg" width="48" height="48">&nbsp;$PROGRAM
+ </h1>
+ $INCLUDE(tabs.html)
+ <div class="main" id="options">
+  $INCLUDE(exit.html)
+  <form name="options">
+  <small>
+   BASIC:
+  </small>
+  <div class="option">
+   <div class="label">
+    <i>$PROGRAM</i> enabled?
+   </div>
+   <div class="input">
+    <input title="Enable filter circumvention." type="radio" name="enabled"
+           value="true" onChange="doSubmit()"> Yes
+    <input title="Disable filter circumvention." type="radio" name="enabled"
+           value="false" onChange="doSubmit()"> No
+   </div>
+  </div>
+  <div class="option">
+   <div class="label">
+    HTTP hiding mode?
+   </div>
+   <div class="input">
+    <select class="input" title="Select what HTTP traffic $PROGRAM will hide from filters."
+            name="http_mode" onChange="doSubmit()">
+     <option title="Hide all HTTP traffic originating from this computer."
+             value="all">
+      Hide all HTTP traffic
+     </option>
+     <option title="Hide all HTTP traffic containing data originating from this computer."
+             value="data">
+      Hide HTTP data traffic only
+     </option>
+     <option title="Hide all HTTP traffic containing URL data originating from this computer."
+             value="url">
+      Hide HTTP URL traffic only
+     </option>
+     <option title="Hide HTTP traffic containing URL data originating from this computer, but only hide part of the URL."
+             value="urlpart">
+      Hide partial HTTP URL traffic only
+     </option>
+     <option title="Do not hide any HTTP traffic from this computer."
+             value="none">
+      Do not hide HTTP traffic
+     </option>
+    </select>
+   </div>
+  </div>
+  <br>
+  <small>
+   ADVANCED:
+  </small>
+  <div class="option">
+   <div class="label">
+    DNS hiding?
+   </div>
+   <div class="input">
+    <input title="Hide DNS requests originating from this computer."
+           type="radio" name="dns_mode"
+           value="true" onChange="doSubmit()"> Yes
+    <input title="Do not hide DNS requests" type="radio" name="dns_mode"
+           value="false" onChange="doSubmit()"> No
+   </div>
+  </div>
+  <div class="option">
+   <div class="label">
+    Use NAT traversal?
+   </div>
+   <div class="input">
+    <select class="input" title="Select whether to use NAT traversal or not."
+            name="nat_mode" onChange="doSubmit()">
+     <option title="Always attempt NAT traversal." value="always">
+      Always
+     </option>
+     <option title="Only use NAT traversal if this computer has a local IP address."
+             value="automatic">
+      Automatic
+     </option>
+     <option title="Never attempt NAT traversal." value="never">
+      Never
+     </option>
+    </select>
+   </div>
+  </div>
+  <div class="option">
+   <div class="label">
+    NAT traversal method?
+   </div>
+   <div class="input">
+    <select class="input" title="Select which method to use for NAT traversal."
+            name="nat_method" onChange="doSubmit()">
+     <option title="Send ghost packets with low time-to-live (TTL) values."
+             value="ttl">
+      Low time-to-live method
+     </option>
+     <option title="Send ghost packets with invalid checksums."
+             value="checksum">
+      Bad checksum method
+     </option>
+     <option title="Send ghost packets with a combination of both low time-to-live (TTL) and bad checksum values."
+             value="combination">
+      Combination method
+     </option>
+    </select>
+   </div>
+  </div>
+  <div class="option">
+   <div class="label">
+    Ghost packet hops?
+   </div>
+   <div class="input">
+    <select class="input" title="Select the number of hops for ghost packets (i.e., the ghost packet time-to-live (TTL) value)."
+           name="ttl" onChange="doSubmit()">
+       <option value="2">2</option>
+       <option value="3">3</option>
+       <option value="4">4</option>
+       <option value="5">5</option>
+       <option value="6">6</option>
+       <option value="7">7</option>
+       <option value="8">8</option>
+       <option value="9">9</option>
+       <option value="10">10</option>
+       <option value="11">11</option>
+       <option value="12">12</option>
+       <option value="13">13</option>
+       <option value="14">14</option>
+       <option value="15">15</option>
+       <option value="16">16</option>
+    </select>
+   </div>
+  </div>
+  <div class="option">
+   <div class="label">
+    Packet splitting method?
+   </div>
+   <div class="input">
+    <select class="input" title="Select which packet splitting (fragmentation) method to use."
+            name="frag_mode" onChange="doSubmit()">
+     <option title="Use network layer packet splitting (not recommended)."
+             value="network">
+      Network Layer
+     </option>
+     <option title="Use transport layer packet splitting (recommended)."
+             value="transport">
+      Transport Layer
+     </option>
+    </select>
+   </div>
+  </div>
+  </form>
+ </div>
+ $INCLUDE(state.html)
+</div>
+</body>
+</html>

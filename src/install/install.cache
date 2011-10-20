@@ -1,0 +1,9 @@
+# Installed tunnel cache
+# AUTOMATICALLY GENERATED, DO NOT EDIT
+
+# AGE = 16
+udp://tunnel.reqrypt.org:30201?crypt=cipher.xxtea,cert.Tq5BWwTN6ddJhnXKBbFC7z,sec.2888 16
+
+# AGE = 16
+udp://tunnel.reqrypt.org:55577?crypt=cipher.aes,cert.uX5h0LEL3Aj-ZwCHFTLEYx,sec.2888 16
+

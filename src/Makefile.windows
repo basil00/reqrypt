@@ -1,0 +1,108 @@
+# Makefile.windows
+# (C) 2010, all rights reserved,
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+include ../cfg.mk
+
+PWD = $(shell echo %CD%)
+
+OBJS = \
+    base64.obj \
+    checksum.obj \
+    client.obj \
+    cktp_client.obj \
+    cktp_common.obj \
+    cktp_encoding.obj \
+    cktp_url.obj \
+    config.obj \
+    encodings/aes.obj \
+    encodings/crypt.obj \
+    encodings/pad.obj \
+    encodings/natural.obj \
+    http_server.obj \
+    install.obj \
+    log.obj \
+    options.obj \
+    packet.obj \
+    packet_dispatch.obj \
+    packet_filter.obj \
+    packet_protocol.obj \
+    packet_track.obj \
+    random.obj \
+    tunnel.obj \
+    $(PLATFORM)/capture.obj \
+    $(PLATFORM)/misc.obj \
+    $(PLATFORM)/resources.obj
+
+client: CFLAGS = $(CLIENT_CFLAGS)
+client: CLIBS = -lws2_32 -lkernel32
+client: $(OBJS)
+	$(CC) -o $(CLIENT_PROG).exe $(OBJS) -Wl,-subsystem,windows $(CLIBS)
+	strip $(CLIENT_PROG).exe
+
+$(PLATFORM)/resources.obj: $(PLATFORM)/resources.rc
+	(cd $(PLATFORM); $(WINDRES_PATH) resources.rc resources.obj)
+
+%.obj: %.c http_data.c install_data.c
+	$(CC) $(CFLAGS) -o $@ -c $<
+
+http_data.c: ui/* tools/file2c.exe
+	(cd ui/; ../tools/file2c.exe * > ../http_data.c)
+install_data.c: install/* tools/file2c.exe
+	(cd install/; ../tools/file2c.exe * > ../install_data.c)
+
+ifeq ($(CROSS),yes)
+tools/file2c.exe: CC := gcc --std=c99
+endif
+tools/file2c.exe: tools/file2c.c
+	$(CC) $(CLIENT_CFLAGS) -o $@ $<
+
+ifeq ($(PLATFORM),windows)
+driver:
+	cmd /c "$(WDK_WINPATH)\bin\setenv.bat $(WDK_WINPATH) fre x86 WXP && \
+        cd /d $(PWD)\$(PLATFORM)\driver && \
+        nmake && \
+        cd /d $(PWD)\$(PLATFORM)\driver\install && \
+        nmake"
+else
+driver:
+endif
+
+install: client driver
+ifeq ($(PLATFORM),windows)
+	cp "$(ROOT)/src/$(PLATFORM)/driver/objfre_wxp_x86/i386/driver.sys" \
+        "$(ROOT)/src/$(PLATFORM)/install/$(PACKAGE_NAME)_driver.sys"
+	cp "$(ROOT)/src/$(PLATFORM)/driver/driver.inf" \
+        "$(ROOT)/src/$(PLATFORM)/install/$(PACKAGE_NAME)_driver.inf"
+	cp "$(ROOT)/src/$(PLATFORM)/driver/driver_m.inf" \
+        "$(ROOT)/src/$(PLATFORM)/install/$(PACKAGE_NAME)_driver_m.inf"
+	cp "$(ROOT)/src/$(PLATFORM)/driver/install/objfre_wxp_x86/i386/install.exe" \
+        "$(ROOT)/src/$(PLATFORM)/install/$(PACKAGE_NAME)_driver-install.exe"
+endif
+	cp "$(ROOT)/src/$(CLIENT_PROG).exe" \
+        "$(ROOT)/src/$(PLATFORM)/install/$(CLIENT_PROG).exe"
+	cp "$(ROOT)/src/$(PLATFORM)/manifest.xml" \
+        "$(ROOT)/src/$(PLATFORM)/install/$(CLIENT_PROG).exe.manifest"
+	(cd $(ROOT)/src/$(PLATFORM)/install/; \
+	 "$(NSIS_PATH)" install.nsi)
+	cp "$(ROOT)/src/$(PLATFORM)/install/$(PACKAGE_NAME)-install.exe" \
+        "$(ROOT)/src/"
+
+clean:
+	rm -f $(OBJS) http_data.c install_data.c tools/file2c.exe
+	rm -rf $(PLATFORM)/driver/objfre_wxp_x86 \
+        $(PLATFORM)/driver/install/objfre_wxp_x86
+	rm -f $(PLATFORM)/install/$(PACKAGE_NAME)*
+

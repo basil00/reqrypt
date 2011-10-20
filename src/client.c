@@ -1,0 +1,205 @@
+/*
+ * client.c
+ * (C) 2010, all rights reserved,
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+#include <stdbool.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#include "capture.h"
+#include "cfg.h"
+#include "config.h"
+#include "http_server.h"
+#include "install.h"
+#include "log.h"
+#include "misc.h"
+#include "options.h"
+#include "packet.h"
+#include "packet_dispatch.h"
+#include "packet_filter.h"
+#include "packet_track.h"
+#include "random.h"
+#include "thread.h"
+#include "tunnel.h"
+
+/*
+ * Prototypes.
+ */
+static void *configuration_thread(void *arg);
+static bool user_exit(http_buffer_t buff);
+
+/*
+ * Global configuration.
+ */
+mutex_t config_lock;
+struct config_s config;
+
+/*
+ * Main entry point:
+ */
+int MAIN(int argc, char **argv)
+{
+    // First print GPL information:
+    printf("%s %s Copyright (C) 2011 basil\n", PROGRAM_NAME_LONG,
+        PROGRAM_VERSION);
+    puts("License GPLv3+: GNU GPL version 3 or later "
+        "<http://gnu.org/licenses/gpl.html>.");
+    puts("This is free software: you are free to change and redistribute it.");
+    puts("There is NO WARRANTY, to the extent permitted by law.");
+    putchar('\n');
+
+    // Process options:
+    options_init(argc, argv);
+
+    // Initialise various components (order is important!).
+    log_init();
+    trace("changing to home directory %s", PROGRAM_DIR);
+    chdir_home();
+    trace("installing files (if required)");
+    install_files();
+    trace("initialising user configuration");
+    config_init();
+    trace("initialising tunnel management");
+    tunnel_init();
+
+    // Initialise the sockets library (if required on this platform).
+    trace("initialising sockets");
+    init_sockets();
+
+    // Create configuration server thread.
+    trace("launching configuration server thread");
+    if (thread_lock_init(&config_lock))
+    {
+        error("unable to initialise global configuration lock");
+    }
+    thread_t config_thread;
+    if (!options_get()->seen_no_ui &&
+        thread_create(&config_thread, configuration_thread, NULL))
+    {
+        error("unable to initialise configuration server thread");
+    }
+
+    // Open the packet capture/injection device driver.
+    trace("initialising packet capture");
+    if (!options_get()->seen_no_capture)
+    {
+        init_capture();
+    }
+
+    // Open the tunnels.
+    trace("initialising tunnels");
+    tunnel_file_read();
+    tunnel_open();
+
+    // Go to sleep if we are not capturing packets.
+    while (options_get()->seen_no_capture)
+    {
+        sleeptime(UINT64_MAX);
+    }
+
+    // RNG for packet_dispatch
+    random_state_t rng = random_init();
+
+    // The main loop.  
+    // Handles either incoming packets, or requests from the configuration
+    // server.
+    while (true)
+    {
+        uint8_t packet[CKTP_MAX_PACKET_SIZE + sizeof(struct ethhdr)];
+        uint8_t packet_buff[PACKET_BUFF_SIZE];
+        size_t packet_len = get_packet(packet, sizeof(packet));
+
+        struct config_s config;
+        config_get(&config);
+
+        // Do we need to tunnel this packet?
+        if (!packet_filter(&config, packet, packet_len))
+        {
+            inject_packet(packet, packet_len);
+            continue;
+        }
+
+        // Is there a tunnel available for use?
+        if (!tunnel_ready())
+        {
+            warning("unable to tunnel packet (no suitable tunnel is open); "
+                "the packet will be sent via the normal route");
+            inject_packet(packet, packet_len);
+            continue;
+        }
+
+        // Is this packet a repeat or not?
+        uint64_t packet_hash;
+        unsigned packet_rep;
+        packet_track(packet, &packet_hash, &packet_rep);
+
+        // Dispatch the packet (fragments)
+        struct ethhdr *allowed_packets[DISPATCH_MAX_FRAGMENTS+1];
+        struct iphdr *tunneled_packets[DISPATCH_MAX_FRAGMENTS+1];
+        allowed_packets[0]  = NULL;
+        tunneled_packets[0] = NULL;
+        packet_dispatch(&config, rng, packet, packet_len, packet_hash,
+            packet_rep, allowed_packets, tunneled_packets, packet_buff);
+
+        // Tunnel the packets
+        if (!tunnel_packets(packet, (uint8_t **)tunneled_packets, packet_hash,
+                packet_rep, config.mtu))
+        {
+            continue;
+        }
+
+        // Allow packets.
+        for (int i = 0; allowed_packets[i] != NULL; i++)
+        {
+            size_t tot_len = sizeof(struct ethhdr) +
+                ntohs(((struct iphdr *)(allowed_packets[i] + 1))->tot_len);
+            inject_packet((uint8_t *)allowed_packets[i], tot_len);
+        }
+    }
+}
+
+/*
+ * Configuration thread.
+ */
+static void *configuration_thread(void *arg)
+{
+    int port = (options_get()->seen_ui_port? options_get()->val_ui_port:
+        PROGRAM_UI_PORT);
+    if (port <= 0 || port > UINT16_MAX)
+    {
+        error("unable to start user interface server; expected a port number "
+            "0..%u, found %d", UINT16_MAX, port);
+    }
+
+    // Register an exit handler.
+    http_register_callback("exit", user_exit);
+
+    log("starting %s user interface http://localhost:%u/", PROGRAM_NAME, port);
+    http_server(port, config_callback);
+    return NULL;
+}
+
+/*
+ * User interface exit handler.
+ */
+static bool user_exit(http_buffer_t buff)
+{
+    quit(EXIT_SUCCESS);
+}
+

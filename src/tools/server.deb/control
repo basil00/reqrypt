@@ -1,0 +1,20 @@
+Package: reqryptd
+Version: 0.2
+Maintainer: Basil <basil@thisisnotmyrealemail.com>
+Section: net
+Priority: optional
+Homepage: http://reqrypt.org
+Architecture: amd64
+Depends: libc6 (>= 2.7), libgmp3c2, libssl0.9.8
+Description: Reqrypt tunnel server
+ Reqrypt (REQuest ecRYPTion) is a tool for encrypting and tunneling HTTP
+ request packets.  This package provides the reqrypt tunnel server.  Install
+ this package if you wish to create one or more reqrypt tunnel endpoints on
+ this system.
+ .
+ Reqrypt servers are designed to consume minimal CPU and memory resources.
+ They can be run on low-resource systems such as cheap virtual private servers.
+ The reqrypt tunnel server is known to be compatible with Linux dedicated
+ servers, or Xen (Linux) virtual private servers, provided the server is
+ hosted by a compatible network.  Please test your tunnels before publishing
+ them.

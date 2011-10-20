@@ -1,0 +1,14 @@
+Package: reqrypt
+Version: 0.2
+Maintainer: Basil <basil@thisisnotmyrealemail.com>
+Section: net
+Priority: optional
+Homepage: http://reqrypt.org
+Architecture: amd64
+Depends: libc6 (>= 2.7)
+Description: Reqrypt client
+ ReQrypt (REQuest ecRYPTion) is a tool for encrypting your web browser requests
+ -- i.e. the URLs you type into your address bar -- so malicious parties cannot
+ read them. ReQrypt is specifically designed for (1) bypassing ISP-level URL
+ censorship systems; and (2) bypassing ISP-level URL logging and data retention
+ systems. 

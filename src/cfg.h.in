@@ -1,0 +1,95 @@
+/*
+ * cfg.h.in
+ * (C) 2010, all rights reserved,
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+#ifndef __CFG_H
+#define __CFG_H
+
+/*
+ * The name of the package.
+ */
+#define PACKAGE_NAME        "@PACKAGE_NAME@"
+
+/*
+ * The name of the program.
+ */
+#ifdef CLIENT
+#define PROGRAM_NAME        PACKAGE_NAME
+#endif      /* CLIENT */
+
+#if defined(SERVER) || defined(TOOL)
+#define PROGRAM_NAME        "@PACKAGE_NAME@d"
+#endif      /* SERVER */
+
+/*
+ * The human readable name of the program.
+ */
+#define PROGRAM_NAME_LONG   "@PACKAGE_NAME_LONG@"
+
+/*
+ * The program's version.
+ */
+#define PROGRAM_VERSION     "@PACKAGE_VERSION@"
+
+/*
+ * 32-bit vs. 64-bit?
+ */
+#define BITS                @BITS@
+
+/*
+ * The program's working directory.
+ */
+#ifdef CLIENT
+#ifdef WINDOWS
+#define PROGRAM_DIR         "C:\\Program Files\\" PROGRAM_NAME_LONG "\\"
+#else       /* WINDOWS */
+#define PROGRAM_DIR         "." PROGRAM_NAME
+#endif      /* WINDOWS */
+#endif      /* CLIENT */
+
+#if defined(SERVER) || defined(TOOL)
+#define PROGRAM_DIR         "/etc/" PROGRAM_NAME "/"
+#endif      /* SERVER */
+
+/*
+ * The default UI port.
+ */
+#define PROGRAM_UI_PORT     40404
+
+/*
+ * size_t format.
+ */
+#ifdef WINDOWS
+#if BITS == 32
+#define SIZE_T_FMT          "%u"
+#else       /* BITS == 32 */
+#define SIZE_T_FMT          "%Iu"
+#endif      /* BITS == 32 */
+#else       /* WINDOWS */
+#define SIZE_T_FMT          "%zu"
+#endif      /* WINDOWS */
+
+/*
+ * Main function name.
+ */
+#ifdef WINDOWS
+#define MAIN                client_main
+#else       /* WINDOWS */
+#define MAIN                main
+#endif      /* WINDOWS */
+
+#endif      /* __CFG_H */

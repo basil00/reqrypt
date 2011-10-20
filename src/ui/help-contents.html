@@ -1,0 +1,539 @@
+<!doctype html>
+<html>
+<head>
+ <link href="style.css" rel="stylesheet" type="text/css">
+</head>
+<body bgcolor="#ffffff">
+<div class="help">
+ <h1>$PROGRAM</h1>
+ <h2>Table of Contents</h2>
+ <ul>
+  <li><a href="#gen_info">General Information</a>
+   <ul>
+    <li><a href="#what_is">What is $PROGRAM?</a>
+    <li><a href="#how_work">How does $PROGRAM work?</a>
+    <li><a href="#how_use">How do I use $PROGRAM?</a>
+   </ul>
+  <li><a href="#tech_info">Technical Information</a>
+   <ul>
+    <li><a href="#how_really">How does $PROGRAM really work?</a>
+    <li><a href="#anon">Does $PROGRAM allow me to browse anonymously?</a>
+   </ul>
+  <li><a href="#home">Home Tab</a>
+   <ul>
+    <li><a href="#what_home">What is the home tab for?</a>
+   </ul>
+  <li><a href="#log">Log Tab</a>
+   <ul>
+    <li><a href="#what_log">What are the log messages?</a>
+    <li><a href="#what_disp">What is "Display messages"?</a>
+   </ul>
+  <li><a href="#options">Options Tab</a>
+   <ul>
+    <li><a href="#what_enabled">What is "$PROGRAM enabled"?</a>
+    <li><a href="#what_hide">What is "HTTP hiding mode"?</a>
+    <li><a href="#what_dns">What is "DNS Hiding"?</a>
+    <li><a href="#what_nat">What is "Use NAT Traversal"?</a>
+    <li><a href="#what_nat_meth">What is "NAT traversal method"?</a>
+    <li><a href="#what_hops">What is "Ghost packet hops"?</a>
+    <li><a href="#what_split">What is "Packet splitting method"?</a>
+   </ul>
+  <li><a href="#tunnels">Tunnels Tab</a>
+   <ul>
+    <li><a href="#what_url">What is a tunnel URL?</a>
+    <li><a href="#what_crypt">What is the crypt encoding?</a>
+    <li><a href="#what_pad">What is the pad encoding?</a>
+    <li><a href="#what_open">What are the "OPEN" and "AVAILABLE" tunnels?</a>
+    <li><a href="#what_add">What is "Add/Remove tunnels"?</a>
+   </ul>
+ </ul>
+ <hr>
+ <a name="gen_info"><h2>General Information</h2></a>
+ <div class="question">
+  <a name="what_is">What is $PROGRAM?</a>
+ </div>
+ <div class="answer">
+  <p>
+   $PROGRAM is a tool for bypassing ISP-level censorship systems.
+   $PROGRAM is also an anti ISP-level traffic sniffing/logging tool.
+  </p>
+  <p>
+   $PROGRAM:
+   <ul>
+    <li> <b>is free</b>.  $PROGRAM is 100% open source and free.
+    <li> <b>is fast</b>.  $PROGRAM is based on one-way packet routing
+        rather than proxy servers.
+    <li> <b>keeps your IP address</b>.  $PROGRAM does not use proxy servers
+        and thus will never change your IP address.
+   </ul>
+  </p>
+ </div>
+
+ <div class="question">
+  <a name="how_work">How does $PROGRAM work?</a>
+ </div>
+ <div class="answer">
+  <p>
+   $PROGRAM works by rerouting web browser requests via encrypted
+   <a href="http://en.wikipedia.org/wiki/Tunneling_protocol">tunnels</a>.
+   This hides web browser requests from any ISP-level censorship system.
+  </p>
+  <p>
+   Unlike proxy servers, VPN, Tor, etc., $PROGRAM simply reroutes web browser
+   requests without changing your IP address.
+   Web pages are sent directly to your computer from the web server, and
+   not through an encrypted tunnel.
+   This means lower latencies and higher bandwidth compared to other
+   technologies.
+  </p>
+ </div>
+
+ <div class="question">
+  <a name="how_use">How do I use $PROGRAM?</a>
+ </div>
+ <div class="answer">
+  <p>
+   Simply:
+   <ol>
+    <li> Run the $PROGRAM executable.
+    <li> Check the "<i><a href="#tunnels">TUNNELS</a></i>" tab to ensure
+         that at least one tunnel is open.
+    <li> Check the "<i><a href="#options">OPTIONS</a></i>" tab to tune
+         $PROGRAM to suit your needs.
+   </ol>
+   See below for more information about the <a href="#tunnels">TUNNELS</a>
+   and <a href="#options">OPTIONS</a> tabs.
+  </p>
+ </div>
+
+ <hr>
+ <a name="tech_info"><h2>Technical Information</h2></a>
+ <div class="question">
+  <a name="how_really">How does $PROGRAM <i>really</i> work?</a>
+ </div>
+ <div class="answer">
+  <p>
+   To download and display a page, a web browser will open a TCP port 80
+   connection to a web server.
+   It then sends a <tt>HTTP GET</tt> request to the web server, and the
+   web server responds by sending a <tt>HTTP OK</tt> reply.
+   The <tt>HTTP GET</tt> request contains the URL and the <tt>HTTP OK</tt>
+   reply contains the web page.
+  </p>
+  <p>
+   The <tt>HTTP GET</tt> request is send <i>upstream</i>, and the
+   <tt>HTTP OK</tt> reply is sent <i>downstream</i>.
+   $PROGRAM works by tunnelling upstream <tt>HTTP GET</tt>
+   requests to a special server that forwards the request to the web server.
+   $PROGRAM does not tunnel the downstream replies, these are sent directly
+   from the web server to your computer via the normal route.
+  </p>
+  <p>
+   This is an effective technology because most ISP-level censorship check
+   upstream <tt>HTTP GET</tt> request <i>only</i>.
+   These systems never check downstream replies.
+   This is because only upstream requests contain the URL, and because
+   upstream requests are generally smaller (think URL size vs. web page size.)
+   It is generally infeasible to inspect all downstream web browser traffic
+   at the ISP-level.
+  </p>
+  <p>
+   This is also the motivation behind $PROGRAM.
+   By only tunnelling upstream requests a single $PROGRAM server can support
+   significantly more users than a traditional proxy server with the same
+   bandwidth constraints.
+   The savings are then passed on to all $PROGRAM users.
+  </p>
+ </div>
+
+ <div class="question">
+  <a name="anon">Does $PROGRAM allow me to browse anonymously?</a>
+ </div>
+ <div class="answer">
+  <p>
+   No.
+   $PROGRAM does not hide your IP address from web servers nor anybody
+   inspecting downstream traffic.
+  </p>
+  <p>
+   If you desire anonymous browsing, then $PROGRAM is not for you.
+   For this we recommend using a proxy server, VPN, or
+   <a href="http://www.torproject.org/">Tor</a>.
+  </p>
+ </div>
+
+ <hr>
+ <a name="home"><h2>Home Tab</h2></a>
+ <div class="question">
+  <a name="what_home">What is the home tab for?</a>
+ </div>
+ <div class="answer">
+  <p>
+   The HOME tab displays the <i>client home page</i> from the $PROGRAM website.
+   This page is periodically updated with the latest news, releases, and
+   tunnel lists.
+  </p>
+ </div>
+
+ <hr>
+ <a name="log"><h2>Log Tab</h2></a>
+ <div class="question">
+  <a name="what_log">What are the log messages?</a>
+ </div>
+ <div class="answer">
+  <p>
+   The log messages display what is going on.
+   The types of log messages are:
+   <ul>
+    <li> <b>warnings</b> indicate some kind of problem.
+    <li> <b>errors</b> indicate a serious problem that will cause $PROGRAM to
+         exit.
+    <li> <b>packets</b> indicate a tunneled packet.
+    <li> <b>trace</b> very verbose messages (debugging.)
+    <li> <b>log</b> Any other kind message.
+   </ul>
+  </p>
+ </div>
+
+ <div class="question">
+  <a name="what_disp">What is "Display messages"?</a>
+ </div>
+ <div class="answer">
+  <p>
+   This controls which kinds of messages are printed.
+   The options are:
+   <ul>
+    <li> <b>All Messages</b>: Prints every kind of message.
+    <li> <b>Packets &amp; Warnings</b>: Prints every kind of message
+         except trace messages.
+    <li> <b>Warnings</b>: Prints warning and error messages only.
+    <li> <b>No Messages</b>: Does not print any message.
+   </ul>
+  </p>
+ </div>
+
+ <hr>
+ <a name="options"><h2>Options Tab</h2></a>
+ <div class="question">
+  <a name="what_enabled">What is "$PROGRAM enabled"?</a>
+ </div>
+ <div class="answer">
+  <p>
+   This controls whether or not $PROGRAM tunnels packets.
+   The options are:
+   <ul>
+    <li> <b>Enabled</b>: $PROGRAM will tunnel packets
+    <li> <b>Disabled</b>: $PROGRAM will not tunnel packets
+   </ul>
+  </p>
+  <p>
+   When disabled, $PROGRAM offers no protection against ISP-level censorship
+   systems.
+  </p>
+ </div>
+
+ <div class="question">
+  <a name="what_hide">What is "HTTP hiding mode"?</a>
+ </div>
+ <div class="answer">
+  <p>
+   This decides which upstreams packets are tunneled.
+   The options are:
+   <ol>
+    <li> <b>Hide all HTTP traffic</b>: Tunnels all upstream TCP port 80 (HTTP)
+         packets.
+    <li> <b>Hide HTTP data traffic only</b>: Tunnels all upstream TCP port 80
+         packets that contain data.
+         TCP control packets such as SYNs, ACKs, etc., are not tunneled.
+    <li> <b>Hide HTTP URL traffic only</b>: Like above, except will split
+         upstream TCP port 80 packets into two parts.
+         The first part containing the URL is tunneled, and the part containing
+         non-URL data (e.g. other HTTP headers) is sent via the normal route.
+    <li> <b>Hide partial HTTP URL traffic only</b>: Like above, except will
+         split the URL itself into two parts.
+         This means that only part of the URL is sent via the normal route.
+    <li> <b>Do not hide HTTP traffic</b>: Do not tunnel any traffic.
+   </ol>
+  </p>
+  <p>
+   <b><i>NOTE:</i></b> Whether or not an option is effective depends on the
+   ISP-level censorship technology you wish to bypass.
+   In a nutshell, the "<i>Hide all HTTP traffic</i>" is the most conservative
+   mode that is most likely to work, but is the slowest because it tunnels the
+   most packets.
+   The "<i>Hide partial HTTP URL traffic only</i>" mode is the fastest but is
+   only effective against inspection/logging systems, and some kinds of
+   non-proxying censorship systems.
+   It is recommended you use the least conservative mode that works.
+  </p>
+ </div>
+
+ <div class="question">
+  <a name="what_dns">What is "DNS Hiding"?</a>
+ </div>
+ <div class="answer">
+  <p>
+   This tunnels DNS requests in addition to HTTP requests.
+   This may be useful against ISP-level censorship systems that use
+   <a href="http://en.wikipedia.org/wiki/DNS_cache_poisoning">DNS Cache
+   Poisoning</a>.
+   To use this option, you must first configure your operating system to use an
+   <i>external</i> DNS server such as
+   <a href="http://code.google.com/speed/public-dns/">Google public DNS</a>
+   or
+   <a href="http://www.opendns.com/">OpenDNS</a>.
+   Do <b>NOT</b> use the DNS provided by your ISP.
+   Once correctly configured:
+   <ul>
+    <li> <b>Enabled</b>: Enables DNS request tunneling
+    <li> <b>Disabled</b>: Disables DNS request tunneling
+   </ul>
+  </p>
+ </div>
+
+ <div class="question">
+  <a name="what_nat">What is "Use NAT Traversal"?</a>
+ </div>
+ <div class="answer">
+  <p>
+   Most home router/modems use
+   <a href="http://en.wikipedia.org/wiki/Network_address_translation">
+   Network Address Translation</a> (NAT) to allow multiple computers to share
+   a single broadband connection.
+   Because $PROGRAM tunnels TCP packets, a
+   <a href="http://en.wikipedia.org/wiki/NAT_traversal">NAT traversal</a>
+   method is required.
+   The options are:
+   <ul>
+    <li> <b>Never</b>: Never use NAT traversal.
+    <li> <b>Automatic</b>: Use NAT traversal only if a NAT is detected.
+         NAT detection works by checking whether your computer's IP address is 
+         private or public.
+         A private address is assumed to indicate a NAT.
+    <li> <b>Always</b>: Always use NAT traversal.
+   </ul>
+  </p>
+ </div>
+
+ <div class="question">
+  <a name="what_nat_meth">What is "NAT traversal method"?</a>
+ </div>
+ <div class="answer">
+  <p>
+   There are two NAT traversal methods that are currently supported by
+   $PROGRAM.
+   The methods are:
+   <ul>
+    <li> <b>Low time-to-live method</b>: This method substitutes a "ghost"
+         packet for every packet that is sent via the tunnel.
+         The ghost packet is given a low time-to-live (TTL) value to ensure
+         it reaches the NAT but never reaches the destination web server.
+    <li> <b>Bad checksum method</b>: This method substitutes a "ghost" packet
+         with a bad TCP (or UDP) checksum.
+         The ghost packet will reach the destination web server, however it 
+         will be dropped because of the invalid checksum.
+    <li> <b>Combination method</b>: This combines both the low TTL and bad
+         checksum methods.
+   </ul>
+  </p>
+  <p>
+   <b><i>NOTE:</i></b> Ghost packets carry randomized HTTP (or DNS) payloads.
+   The tunneled payload is never revealed by a ghost packet.
+  </p>
+  <p>
+   <b><i>NOTE:</i></b> Only select the "<i>Bad checksum method</i>" if the
+   "<i>Low time-to-live method</i>" does not work.
+   The bad checksum method causes the web server to consume extra bandwidth.
+  </p>
+  <p>
+   <b><i>NOTE:</i></b> Some NAT implementations are incompatible with both
+   traversal methods.
+   In this case the only solution is to remove the NAT altogether.
+  </p>
+ </div>
+
+ <div class="question">
+  <a name="what_hops">What is "Ghost packet hops"?</a>
+ </div>
+ <div class="answer">
+  <p>
+   If $PROGRAM is using the "<i>Low time-to-live method</i>" or
+   "<i>Combination method</i>" for NAT traversal, this option controls how
+   many hops the ghost packets live for.
+   In other words, this option sets the IPv4 time-to-live (TTL) value for
+   ghost packets.
+   This should be the number of hops to your NAT plus 1.
+   For a typical home network configuration this value should be 2.
+  </p>
+ </div>
+
+ <div class="question">
+  <a name="what_split">What is "Packet splitting method"?</a>
+ </div>
+ <div class="answer">
+  <p>
+   If $PROGRAM is using the "<i>Hide HTTP URL traffic only</i>" or
+   "<i>Hide partial HTTP URL traffic only</i>" methods, this option decides
+   how the packet splitting is implemented.
+   The options are:
+   <ul>
+    <li> <b>Network layer</b>: Split packets at the network layer using
+         IPv4 fragmentation.
+    <li> <b>Transport layer</b>: Split packets at the transport (TCP) layer.
+   </ul>
+  </p>
+  <p>
+   <b><i>NOTE:</i></b> Splitting packets on the network layer is problematic.
+   Some home routers attempt to reassemble fragmented packets which 
+   breaks packet splitting altogether.
+   Splitting packets at the transport layer appears to work much better.
+  </p>
+ </div>
+
+ <hr>
+ <a name="tunnels"><h2>Tunnels Tab</h2></a>
+ <div class="question">
+  <a name="what_url">What is a tunnel URL?</a>
+ </div>
+ <div class="answer">
+  <p>
+   Each tunnel is represented by a URL.
+   The URL tells $PROGRAM how to connect to and use the tunnel.
+   The URL syntax is:
+   <pre>
+    URL := TRANSPORT://HOST:PORT?ENCODINGS
+   </pre>
+   where:
+   <ul>
+    <li> <tt>TRANSPORT</tt>: is the transport protocol used by the tunnel.
+         Currently the supported transport protocols are:
+         <ul>
+          <li> <tt>udp</tt>: uses UDP transport
+          <li> <tt>ip</tt>: uses RAW IP packets as transport
+          <li> <tt>ping</tt>: uses ICMP echo request/reply as transport
+         </ul>
+    <li> <tt>HOST</tt>: is either the host name or IP address of the server.
+    <li> <tt>PORT</tt>: is the port number associated with the
+         <tt>TRANSPORT</tt> protocol.
+         For <tt>ip</tt> tunnels the port number is the IP protocol number.
+    <li> <tt>ENCODINGS</tt>: specifies how the tunneled packets are encoded.
+         The format for the <tt>ENCODINGS</tt> is
+         <pre>
+          ENCODINGS := ENCODING=OPTIONS+...+ENCODING=OPTIONS
+          OPTIONS := OPTION.VALUE,...,OPTION.VALUE
+         </pre>
+         Currently the supported encodings are 
+         <a href="#what_crypt"><tt>crypt</tt></a> and
+         <a href="#what_pad"><tt>pad</tt></a>.
+         Multiple encodings can be chained together using the <tt>+</tt>
+         token.
+         For such tunnels encodings are applied sequentially from the
+         left-to-right.
+   </ul>
+   Examples:
+   <pre>
+    udp://reqrypt.org:58000?crypt=cipher.xxtea,cert.rQHEq2ky32DOaCopEMFVR0,sec.2888
+    ip://tunnel2.reqrypt.org:99?pad=min.0,max.16
+    udp://tunnel3.reqrypt.org:57000
+    ip://tunnel.reqrypt.org:99?pad=min.0,max.32+crypt=cipher.xxtea,cert.rQHEq2ky32DOaCopEMFVR0
+   </pre>
+   The last example tunnel first applies the <tt>pad</tt> encoding followed by
+   <tt>crypt</tt>.
+  </p>
+  <p>
+   <b><i>NOTE:</i></b> Only tunnels that use the <tt>crypt</tt> encoding are
+   encrypted.
+   See <a href="#what_crypt">below</a> for more information.
+  </p>   
+ </div>
+
+ <div class="question">
+  <a name="what_crypt">What is the <tt>crypt</tt> encoding?</a>
+ </div>
+ <div class="answer">
+  <p>
+   The <tt>crypt</tt> encoding encrypts all tunneled packets.
+   The options for the <tt>crypt</tt> encoding are:
+   <ul>
+    <li> <tt>cert</tt>: The tunnel's certificate hash value.
+         This is used to authenticate the server $PROGRAM connects to.
+    <li> <tt>cipher</tt>: The cipher used for encryption.
+         Currently supported ciphers are <tt>aes</tt> and
+         <tt>xxtea</tt> (128-bit blocks).
+    <li> <tt>handshakepad</tt>: Adds randomized padding to <tt>crypt</tt>
+         handshake packets to make traffic analysis more difficult.
+    <li> <tt>sec</tt>: The 4 digit security setting.
+         The digits are:
+         <ul>
+          <li> Handshake asymmetric key size: <tt>2</tt> = 1024 bits.
+          <li> Key ID size: <tt>5</tt>-<tt>8</tt> bytes.
+          <li> Initialization Vector (IV) size: <tt>4</tt>-<tt>8</tt> bytes.
+          <li> Message Authentication Code (MAC) size:
+               <tt>2</tt>-<tt>8</tt> bytes.
+         </ul>
+         The minimum security setting is <tt>2542</tt>, the maximum is
+         <tt>2888</tt>, and the default is <tt>2653</tt>.
+   </ul>
+  </p>
+  <p>
+   <b><i>NOTE:</i></b> The <tt>handshakepad</tt> option only applies to
+   <tt>crypt</tt> handshake packets.
+   To add padding to non-handshake packets use the <tt>pad</tt> encoding
+   in addition to <tt>crypt</tt>.
+  </p>
+ </div>
+
+ <div class="question">
+  <a name="what_pad">What is the <tt>pad</tt> encoding?</a>
+ </div>
+ <div class="answer">
+  <p>
+   The <tt>pad</tt> encoding adds randomized padding to the front of every
+   tunnelled packet.
+   The options are:
+   <ul>
+    <li> <tt>min</tt>: The minimum pad size between <tt>0</tt>-<tt>255</tt>
+         bytes.
+         The default is <tt>0</tt>.
+    <li> <tt>max</tt>: The maximum pad size between <tt>0</tt>-<tt>255</tt>
+         bytes.
+         The default is <tt>16</tt>.
+    <li> <tt>size</tt>: Fixed size padding between <tt>0</tt>-<tt>255</tt>
+         bytes.
+   </ul>
+  </p>
+  <p>
+   <b><i>NOTE:</i></b> The <tt>pad</tt> encoding has two distinct modes.
+   When <tt>min</tt> and/or <tt>max</tt> is specified, the length of the
+   padding for each packet is randomly chosen from this range.
+   When <tt>size</tt> is specified, the length of the padding is always fixed
+   to the specified size.
+   The <tt>size</tt> option is incompatible with <tt>min</tt>/<tt>max</tt>.
+  </p>
+ </div>
+
+ <div class="question">
+  <a name="what_open">What are the "OPEN" and "AVAILABLE" tunnels?</a>
+ </div>
+ <div class="answer">
+  <p>
+   The set of "OPEN" tunnels are those that are currently available for
+   tunneling packets.
+   The set of "AVAILABLE" tunnels include all URLs that are known by the
+   client, but are not necessarily open.
+   You need at least one open tunnel for $PROGRAM to work.
+  </p>
+ </div>
+
+ <div class="question">
+  <a name="what_add">What is "Add/Remove tunnels"?</a>
+ </div>
+ <div class="answer">
+  <p>
+   This allows you to add new tunnel URLs or to delete existing tunnels.
+   Any added tunnel is immediately opened for use.
+  </p>
+ </div>
+</div>
+</body>
+</html>
