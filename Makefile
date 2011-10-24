@@ -43,7 +43,7 @@ ctool:
 
 client_install: client
 	(cd src/tools; \
-	 ./build_clientdeb.sh $(PACKAGE_NAME); \
+	 ./build_clientdeb.sh $(PACKAGE_NAME) $(PACKAGE_VERSION_SHORT); \
 	 ./build_selfextr.sh header.sh $(CLIENT_PROG); \
 	 mv $(PACKAGE_NAME)_*.deb ../../; \
 	 mv $(CLIENT_PROG).sh \
@@ -69,7 +69,7 @@ client_install_windows: client_windows
 
 server_install: server ctool
 	(cd src/tools; \
-	 ./build_serverdeb.sh $(PACKAGE_NAME); \
+	 ./build_serverdeb.sh $(PACKAGE_NAME) $(PACKAGE_VERSION_SHORT); \
 	 mv $(PACKAGE_NAME)d_*.deb ../../)
 
 clean:

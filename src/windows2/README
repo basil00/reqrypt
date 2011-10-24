@@ -1,9 +1,0 @@
-WINDOWS2
---------
-
-This version of the Windows ReQrypt client borrows the "kernel divert socket
-driver" from tcpcrypt, instead of ReQrypts own driver implementation.
-
-The advantage of the latter is that the tcpcrypt team have the ability to sign
-their driver, whereas we don't.
-

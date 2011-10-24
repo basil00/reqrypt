@@ -1,4 +1,4 @@
-# configure-windows2-cross.ac
+# configure-windows-cross.ac
 # (C) 2011, all rights reserved,
 #
 # This program is free software: you can redistribute it and/or modify
@@ -14,10 +14,10 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-AC_INIT(reqrypt, 0.2)
+AC_INIT(reqrypt, 1.0)
 AC_SUBST(PACKAGE_NAME_LONG, "ReQrypt")
-AC_SUBST(PACKAGE_VERSION, "(beta) 0.2")
-AC_SUBST(PACKAGE_VERSION_SHORT, "0.2")
+AC_SUBST(PACKAGE_VERSION, "1.0")
+AC_SUBST(PACKAGE_VERSION_SHORT, "1.0")
 
 error=no
 
@@ -44,6 +44,32 @@ then
     error=yes
 fi
 
+if test "$DIVERT" = ""
+then
+    DIVERT="./"
+fi
+DIV=div     # Anything called 'divert' seems to break autoconf
+ERT=ert
+DIVERT_NAME=$DIV$ERT
+
+AC_MSG_CHECKING([for $DIVERT_NAME files])
+
+if test -e $DIVERT/x86/$DIVERT_NAME.sys -a \
+        -e $DIVERT/x86/$DIVERT_NAME.dll -a \
+        -e $DIVERT/x86/WdfCoInstaller01009.dll -a \
+        -e $DIVERT/amd64/$DIVERT_NAME.sys -a \
+        -e $DIVERT/amd64/$DIVERT_NAME.dll -a \
+        -e $DIVERT/amd64/WdfCoInstaller01009.dll -a \
+        -e $DIVERT/$DIVERT_NAME.inf -a \
+        -e $DIVERT/$DIVERT_NAME.h
+then
+    AC_MSG_RESULT([yes])
+else
+    AC_MSG_RESULT([no])
+    AC_MSG_NOTICE([*** $DIVERT_NAME files not found.])
+    error=yes
+fi
+
 if test "$error" = "yes"
 then
     AC_MSG_NOTICE([*** correct the above errors first ***])
@@ -53,16 +79,19 @@ fi
 case "$host" in
     amd64-*)
         AC_SUBST(BITS, 64)
+        AC_SUBST(ARCH, amd64)
         ;;
     *)
         AC_SUBST(BITS, 32)
+        AC_SUBST(ARCH, x86)
         ;;
 esac
 
 AC_SUBST(ROOT, `pwd`)
 AC_SUBST(PLATFORM_CAPS, WINDOWS)
-AC_SUBST(PLATFORM, windows2)
+AC_SUBST(PLATFORM, windows)
 AC_SUBST(CROSS, yes)
+AC_SUBST(DIVERT_ROOT, `pwd`/$DIVERT)
 
-AC_OUTPUT([cfg.mk src/cfg.h src/windows2/install/install.nsi])
+AC_OUTPUT([cfg.mk src/cfg.h src/windows/install/install.nsi])
 

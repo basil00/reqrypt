@@ -21,6 +21,16 @@ then
     exit 1
 fi
 
+DIVERT=
+while getopts "hd:" OPTION
+do
+    case $OPTION in
+        d) DIVERT=$OPTARG;;
+        ?) echo "usage: $0 [-h] [-d <divert-install-path>]" >&2
+           exit 1;;
+    esac
+done
+
 set -e
 set -x
 
@@ -33,10 +43,18 @@ make client_install32
 make server_install
 
 # Build Windows 64/32-bit
+set +x
+if [ "$DIVERT" = "" ]
+then
+    echo "$0: run with \"-d <divert-install-path>\" to build windows client"
+    exit 0
+fi
+set -x
+
 rm -rf autom4te.cache cfg.mk config.log config.status configure
-autoconf -o configure configure-windows2-cross.ac
-./configure --host=i586-mingw32msvc
+autoconf -o configure configure-windows-cross.ac
+./configure --host=i586-mingw32msvc "DIVERT=$DIVERT"
 make client_install_windows
-./configure --host=amd64-mingw32msvc
+./configure --host=amd64-mingw32msvc "DIVERT=$DIVERT"
 make client_install_windows
 

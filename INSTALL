@@ -1,0 +1,66 @@
+BUILD INSTRUCTIONS:
+==================
+
+NOTES:
+
+Linux users can build with the build.sh script.  This script will build
+the Linux client and server, and Windows clients.  The usage is:
+    $ ./build.sh -d <divert-install-path>
+where <divert-install-path> is a path to a WinDivert binary package.
+WinDivert binary package can be downloaded from:
+    http://reqrypt.org/divert/
+
+LINUX:
+
+    1) Make sure that the following packages are installed (e.g. with apt-get
+       install):
+       - gcc
+       - autoconf
+       - libssl-dev (server only)
+       - libgmp3-dev (server only)
+
+    2) Run the following commands:
+       $ autoconf
+       $ ./configure
+       $ make client_install
+       $ make server_install        # (server)
+       $ make client_install32      # (32-bit client)
+
+FREEBSD:
+
+    NOTE: freebsd version can only be built on a FreeBSD system.
+
+    1) Make sure that the following packages are installed (e.g. with
+       pkg_add -r):
+       - gcc
+       - autoconf
+       - sudo (& add yourself as a sudoer)
+       - gmake (& replace make with gmake)
+
+    2) Make sure that ipfw and divert sockets are enabled.  Add the following
+       lines to /boot/loader.conf:
+          ipfw_load="YES"
+          ipdivert_load="YES"
+
+    3) Run the following commands:
+       $ autoconf -o configure configure-freebsd.ac
+       $ ./configure
+       $ make client_install_freebsd
+
+WINDOWS:
+
+    NOTE: the windows version can only be built under Linux using the MinGW
+          cross compiler.
+
+    1) Make sure the following packages are installed:
+       - WinDivert  [http://reqrypt.org/divert/]
+       - mingw-w64
+       - nsis
+       - autoconf
+    
+    2) Run the following commands:
+       $ autoconf -o configure configure-windows-cross.ac
+       $ ./configure --host=i586-mingw32msvc        # 32-bit version; or
+       $ ./configure --host=amd64-mingw32msvc       # 64-bit version
+       $ make client_install_windows
+

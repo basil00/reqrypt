@@ -14,10 +14,10 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-AC_INIT(reqrypt, 0.2)
+AC_INIT(reqrypt, 1.0)
 AC_SUBST(PACKAGE_NAME_LONG, "ReQrypt")
-AC_SUBST(PACKAGE_VERSION, "(beta) 0.2")
-AC_SUBST(PACKAGE_VERSION_SHORT, "0.2")
+AC_SUBST(PACKAGE_VERSION, "1.0")
+AC_SUBST(PACKAGE_VERSION_SHORT, "1.0")
 
 error=no
 server=yes
@@ -54,9 +54,11 @@ fi
 case `uname -m` in
     i?86)
         AC_SUBST(BITS, 32)
+        AC_SUBST(ARCH, x86)
         ;;
     *)
         AC_SUBST(BITS, 64)
+        AC_SUBST(ARCH, amd64)
         ;;
 esac
 

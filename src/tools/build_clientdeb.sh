@@ -19,9 +19,9 @@
 # This is to avoid all the complexity of doing it the "correct way"
 # (although eventually this will be unavoidable).
 
-if [ $# != 1 ]
+if [ $# != 2 ]
 then
-    echo "usage: $0 package-name" 1>&2
+    echo "usage: $0 package-name package-version" 1>&2
     exit 1
 fi
 
@@ -32,6 +32,7 @@ then
 fi
 
 PACKAGE_NAME=$1
+PACKAGE_VERSION=$2
 
 set -e
 
@@ -56,7 +57,7 @@ tar cz --owner root --group root -f ../control.tar.gz control postinst \
 rm -f postinst md5sums
 cd ..
 echo "2.0" > debian-binary
-fakeroot ar cr "${PACKAGE_NAME}_0.2_amd64.deb" debian-binary control.tar.gz \
-    data.tar.gz
+fakeroot ar cr "${PACKAGE_NAME}_${PACKAGE_VERSION}_amd64.deb" debian-binary \
+    control.tar.gz data.tar.gz
 rm -f debian-binary control.tar.gz data.tar.gz
 

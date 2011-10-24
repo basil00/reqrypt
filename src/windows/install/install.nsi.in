@@ -1,5 +1,5 @@
 ; install.nsi.in
-; (C) 2010, all rights reserved,
+; (C) 2011, all rights reserved,
 ; 
 ; This program is free software: you can redistribute it and/or modify
 ; it under the terms of the GNU General Public License as published by
@@ -15,6 +15,8 @@
 ; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 !include "MUI2.nsh"
+
+SetCompressor /SOLID /FINAL lzma
 
 Name "@PACKAGE_NAME_LONG@"
 OutFile "@PACKAGE_NAME@-install.exe"
@@ -34,37 +36,18 @@ RequestExecutionLevel admin
 Section ""
     SetOutPath $INSTDIR
     File "@PACKAGE_NAME@.exe"
+    File "@PACKAGE_NAME@.exe.manifest"
+    File "divert.sys"
+    File "divert.inf"
+    File "divert.dll"
+    File "WdfCoInstaller01009.dll"
     WriteUninstaller "@PACKAGE_NAME@-uninstall.exe"
     CreateShortCut "$DESKTOP\@PACKAGE_NAME@.lnk" "$INSTDIR\@PACKAGE_NAME@.exe" ""
 SectionEnd
 
-Section "Install @PACKAGE_NAME_LONG@ Driver"
-    SetOutPath "$INSTDIR\@PACKAGE_NAME@_driver\"
-    File "@PACKAGE_NAME@_driver.sys"
-    File "@PACKAGE_NAME@_driver.inf"
-    File "@PACKAGE_NAME@_driver_m.inf"
-    File "@PACKAGE_NAME@_driver-install.exe"
-    nsExec::ExecToLog '"$INSTDIR\@PACKAGE_NAME@_driver\@PACKAGE_NAME@_driver-install.exe" install'
-    pop $0
-    StrCmp $0 "0" driver_inst
-    MessageBox MB_OK|MB_ICONEXCLAMATION "Failed to install the @PACKAGE_NAME_LONG@ network driver.  Click on 'Show Details' for more information."
-    Abort "Failed to install @PACKAGE_NAME@_driver."
-driver_inst:
-SectionEnd
-
 Section "Uninstall"
-    nsExec::ExecToLog '"$INSTDIR\@PACKAGE_NAME@_driver\@PACKAGE_NAME@_driver-install.exe" uninstall'
-    pop $0
-    StrCmp $0 "0" driver_uninst
-    MessageBox MB_OK|MB_ICONEXCLAMATION "Failed to uninstall the @PACKAGE_NAME_LONG@ network driver.  Click on 'Show Details' for more information."
-    Abort "Failed to uninstall @PACKAGE_NAME@_driver."
-driver_uninst:
-    Delete "$INSTDIR\@PACKAGE_NAME@_driver\@PACKAGE_NAME@_driver.sys"
-    Delete "$INSTDIR\@PACKAGE_NAME@_driver\@PACKAGE_NAME@_driver.inf"
-    Delete "$INSTDIR\@PACKAGE_NAME@_driver\@PACKAGE_NAME@_driver_m.inf"
-    Delete "$INSTDIR\@PACKAGE_NAME@_driver\@PACKAGE_NAME@_driver-install.exe"
-    RMDir "$INSTDIR\@PACKAGE_NAME@_driver\"
     Delete "$INSTDIR\@PACKAGE_NAME@.exe"
+    Delete "$INSTDIR\@PACKAGE_NAME@.exe.manifest"
     Delete "$INSTDIR\@PACKAGE_NAME@-uninstall.exe"
     Delete "$INSTDIR\@PACKAGE_NAME@.config"
     Delete "$INSTDIR\@PACKAGE_NAME@.config.bak"
@@ -75,6 +58,10 @@ driver_uninst:
     Delete "$INSTDIR\@PACKAGE_NAME@.crypt.cache"
     Delete "$INSTDIR\@PACKAGE_NAME@.crypt.cache.bak"
     Delete "$INSTDIR\@PACKAGE_NAME@.crypt.cache.tmp"
+    Delete "$INSTDIR\divert.sys"
+    Delete "$INSTDIR\divert.inf"
+    Delete "$INSTDIR\divert.dll"
+    Delete "$INSTDIR\WdfCoInstaller01009.dll"
     RMDir "$INSTDIR\"
     Delete "$DESKTOP\@PACKAGE_NAME@.lnk"
 SectionEnd

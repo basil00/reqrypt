@@ -1,85 +1,72 @@
 REQRYPT
 =======
 
-ReQrypt is a tool for tunneling and encrypting web browser requests so your
-ISP cannot read them.
-
-ReQrypt is useful for bypassing ISP-level URL censorship and/or URL logging
+ReQrypt is a tool for tunneling and encrypting web browser requests to hide
+them from local (e.g. router-level, or ISP-level) snooping and interception.
+ReQrypt is useful for bypassing ISP-level URL censorship/filtering/logging
 systems.
 
-BUILD INSTRUCTIONS:
-===================
+ReQrypt works very differently than other bypassing methods.  ReQrypt is based
+on a technology known as "triangular routing".  In a nutshell, ReQrypt works
+like this:
 
-LINUX:
 
-    1) Make sure that the following packages are installed (e.g. with apt-get
-       install):
-       - gcc
-       - autoconf
-       - libssl-dev (server only)
-       - libgmp3-dev (server only)
+  (1) Tunneled request      +----------------+      (2) Forwarded request
+             +------------->| ReQrypt server |-------------+
+             |              +----------------+             |
+             |                                             |
+             |                                             V
+     +----------------+                             +----------------+
+     | PC web browser |<----------------------------|   Web server   |
+     +----------------+                             +----------------+
+                          (3) Web-page response
 
-    2) Run the following commands:
-       $ autoconf
-       $ ./configure
-       $ make client_install
-       $ make server_install        # (server)
-       $ make client_install32      # (32-bit client)
+Basically
+(1) Your web browser issues a HTTP request to the web-server, which is
+    encrypted and tunnelled to a ReQrypt server.
+(2) The ReQrypt server decrypts the tunneled packet, and forwards it to the
+    web-server.
+(3) The web-server responds the HTTP request as if it came directly from your
+    computer, and the web page response is sent back via the normal route.
 
-FREEBSD:
+Ordinarily, the HTTP request is sent directly to the web server, unencrypted.
+This means it may be read and/or intercepted by a local eavesdropper, such as
+your ISP, workplace, or shared family router.  However, with ReQrypt the
+outgoing HTTP requests are encrypted and tunneled, rendering them unreadable
+to any local eavesdropper.
 
-    1) Make sure that the following packages are installed (e.g. with
-       pkg_add -r):
-       - gcc
-       - autoconf
-       - sudo (& add yourself as a sudoer)
-       - gmake (& replace make with gmake)
+ReQrypt is effective against systems that only attack outbound HTTP requests
+only, and ignore inbound HTTP responses.  Such systems are very common is
+ISP-level censorship and logging systems, since processing URL traffic (HTTP
+requests) is significantly easier than processing web page responses.
 
-    2) Make sure that ipfw and divert sockets are enabled.  Add the following
-       lines to /boot/loader.conf:
-          ipfw_load="YES"
-          ipdivert_load="YES"
+Finally, unlike proxies, VPNs, Tor, etc., ReQrypt is not an anonymity tool.
+It does not change the IP address of the tunneled packet.  This can be a good
+thing: it means the web responses are sent directly to your PC which means
+ReQrypt is typically faster than these other systems.
 
-    3) Run the following commands:
-       $ autoconf -o configure configure-freebsd.ac
-       $ ./configure
-       $ make client_install_freebsd
+LICENSE
+=======
 
-WINDOWS:
+This package is distributed under the GNU Public License (GPL) Version 3.
 
-    1) Make sure the following tools are installed:
-       - MinGW + MSys
-       - Windows Driver Kit (WinDDK)
-       - Nullsoft Scriptable Install System (NSIS)
+Please note the following:
 
-    2) In MSys, run the following commands:
-       $ autoconf -o configure configure-windows.ac
-       $ ./configure
-       $ make client_install_windows
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 
-WINDOWS (2):
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
 
-    (This version uses the tcpcrypt driver)
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>
 
-    1) Make sure the following tools are installed:
-       - MinGW + MSys
-       - Nullsoft Scriptable Install System (NSIS)
+COPYRIGHT
+=========
 
-    2) In MSys, run the following commands:
-       $ autoconf -o configure configure-windows2.ac
-       $ ./configure
-       $ make client_install_windows
-
-WINDOWS (2) [linux cross compilation]:
-
-    1) Make sure the following packages are installed:
-       - mingw-w64
-       - nsis
-       - autoconf
-    
-    2) Run the following commands:
-       $ autoconf -o configure configure-windows2-cross.ac
-       $ ./configure --host=i586-mingw32msvc        # 32-bit version; or
-       $ ./configure --host=amd64-mingw32msvc       # 64-bit version
-       $ make client_install_windows
+(C) 2011, basil00, all rights reserved.
 

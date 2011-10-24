@@ -22,13 +22,12 @@
 #include "cfg.h"
 #include "log.h"
 
-/*
- * The name of the packet capture device I/O interface.
- */
-#define CAPTURE_DEV_NAME    "\\\\.\\\\" PROGRAM_NAME_LONG "Device"
+#define UINT8   unsigned char
+#define UINT16  unsigned short
+#include "divert.h"
 
 /*
- * Packet capture device handle.
+ * Divert device handle.
  */
 HANDLE handle = INVALID_HANDLE_VALUE;
 
@@ -37,13 +36,15 @@ HANDLE handle = INVALID_HANDLE_VALUE;
  */
 void init_capture(void)
 {
-    handle = CreateFile(CAPTURE_DEV_NAME, GENERIC_READ | GENERIC_WRITE,
-        0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, INVALID_HANDLE_VALUE);
-
+    handle = DivertOpen(
+        "outbound and "
+        "ip and "
+        "(tcp.DstPort == 80 or udp.DstPort == 53) and "
+        "ip.DstAddr != 127.0.0.1"
+    );
     if (handle == INVALID_HANDLE_VALUE)
     {
-        error("failed to open packet capture driver \"%s\"",
-            CAPTURE_DEV_NAME);
+        error("unable to open divert packet capture handle");
     }
 }
 
@@ -52,13 +53,13 @@ void init_capture(void)
  */
 size_t get_packet(uint8_t *buff, size_t len)
 {
-    DWORD read_len;
-    if (!ReadFile(handle, buff, len, &read_len, NULL))
+    UINT read_len;
+    if (!DivertRecv(handle, (PVOID)buff, (UINT)len, NULL, &read_len))
     {
-        warning("failed to read packet from packet capture device");
+        warning("unable to read packet from divert packet capture handle");
         return 0;
     }
-    return (unsigned)read_len;
+    return (size_t)read_len;
 }
 
 /*
@@ -66,11 +67,13 @@ size_t get_packet(uint8_t *buff, size_t len)
  */
 void inject_packet(uint8_t *buff, size_t len)
 {
-    DWORD write_len;
-    if (!WriteFile(handle, buff, len, &write_len, NULL) ||
-        len != write_len)
+    DIVERT_ADDRESS addr = {0};
+    UINT write_len;
+    if (!DivertSend(handle, (PVOID)buff, (UINT)len, &write_len, NULL) ||
+        (UINT)len != write_len)
     {
-        warning("failed to inject packet of size " SIZE_T_FMT, len);
+        warning("unable to inject packet of size " SIZE_T_FMT " to "
+            "divert packet capture handle", len);
     }
 }
 
