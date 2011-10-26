@@ -229,11 +229,20 @@ void http_server(uint16_t port, void (*callback)(struct http_user_vars_s *))
     listen_addr.sin6_addr   = in6addr_any;
     int on = 1;
     setsockopt(s_listen, SOL_SOCKET, SO_REUSEADDR, (char *)&on, sizeof(on));
+    // For Windows we must explicitly allow IPv4 connections
+    on = 0;
+    if (setsockopt(s_listen, IPPROTO_IPV6, IPV6_V6ONLY, (char *)&on,
+            sizeof(on)) != 0)
+    {
+        warning("unable to allow incoming IPv4 connections to configuration "
+            "server");
+    }
     if (bind(s_listen, (const void *)&listen_addr, sizeof(listen_addr)) != 0)
     {
         error("unable to create configuation server; failed to bind to "
             "address localhost:%u", port);
     }
+
     if (listen(s_listen, 1) != 0)
     {
         error("unable to create configuation server; failed to listen to "

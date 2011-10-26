@@ -205,12 +205,13 @@ static void help(void)
 #ifdef FREEBSD
     puts("\t--no-ipfw");
     printf("\t\tPrevent %s from issuing ipfw commands.\n", PROGRAM_NAME);
+    puts("\t\tUse this option if you wish to configure ipfw manually.");
 #endif
 #ifdef LINUX
     puts("\t--no-iptables");
     printf("\t\tPrevent %s from issuing iptables commands.\n", PROGRAM_NAME);
-#endif
     puts("\t\tUse this option if you wish to configure iptables manually.");
+#endif
     puts("\t--no-launch-ui");
     puts("\t\tDo not automatically launch the user interface.");
     puts("\t--no-ui");

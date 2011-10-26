@@ -174,8 +174,12 @@ typedef SOCKET socket_t;
 #define SHUT_WR                 SD_SEND
 #define SHUT_RDWR               SD_BOTH
 
-#define UDP_NO_CHECK_LAYER          IPPROTO_UDP
-#define UDP_NO_CHECK_OPTION         UDP_NOCHECKSUM
+#define UDP_NO_CHECK_LAYER      IPPROTO_UDP
+#define UDP_NO_CHECK_OPTION     UDP_NOCHECKSUM
+
+#ifndef IPV6_V6ONLY
+#define IPV6_V6ONLY             27
+#endif
 
 /*
  * Unsupported errno values:
