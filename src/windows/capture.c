@@ -86,7 +86,7 @@ size_t get_packet(uint8_t *buff, size_t len)
     peth_header->sub_if_idx = addr.SubIfIdx;
     peth_header->pad1       = 0x0;
     peth_header->pad2       = 0x0;
-    peth_header->proto      = ETH_P_IP;
+    peth_header->proto      = htons(ETH_P_IP);
 
     return (size_t)(read_len+offset);
 }
