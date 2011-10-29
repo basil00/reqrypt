@@ -52,7 +52,7 @@ fi
 set -x
 
 rm -rf autom4te.cache cfg.mk config.log config.status configure
-autoconf -o configure configure-windows-cross.ac
+autoconf -o configure configure-windows.ac
 ./configure --host=i586-mingw32msvc "DIVERT=$DIVERT"
 make client_install_windows
 ./configure --host=amd64-mingw32msvc "DIVERT=$DIVERT"

@@ -47,20 +47,38 @@ FREEBSD:
        $ ./configure
        $ make client_install_freebsd
 
-WINDOWS:
-
-    NOTE: the windows version can only be built under Linux using the MinGW
-          cross compiler.
+WINDOWS [LINUX CROSS COMPILATION]:
 
     1) Make sure the following packages are installed:
-       - WinDivert  [http://reqrypt.org/divert/]
+       - WinDivert      [http://reqrypt.org/divert/]
        - mingw-w64
        - nsis
        - autoconf
-    
+
     2) Run the following commands:
-       $ autoconf -o configure configure-windows-cross.ac
-       $ ./configure --host=i586-mingw32msvc        # 32-bit version; or
-       $ ./configure --host=amd64-mingw32msvc       # 64-bit version
+
+       (32-bit version)
+       $ autoconf -o configure configure-windows.ac
+       $ ./configure --host=i586-mingw32msvc 'DIVERT=path/to/divert/'
+       $ make client_install_windows
+
+       (64-bit version)
+       $ autoconf -o configure configure-windows.ac
+       $ ./configure --host=amd64-mingw32msvc 'DIVERT=path/to/divert/'
+       $ make client_install_windows
+
+WINDOWS [NATIVE COMPILATION]:
+
+    Note: This method cannot be used to build the 64-bit version.
+
+    1) Make sure the following packages are installed:
+       - WinDivert      [http://reqrypt.org/divert/]
+       - MinGW
+       - MSYS
+       - NSIS
+
+    2) Run the following commands:
+       $ autoconf -o configure configure-windows.ac
+       $ ./configure 'DIVERT=path/to/divert/'
        $ make client_install_windows
 

@@ -30,6 +30,14 @@ then
     error=yes
 fi
 
+if test -d 'C:/Program Files/NSIS/'
+then
+    export PATH=$PATH:'/c/Program Files/NSIS/'
+elif test -d 'C:/Program Files (x86)/NSIS/'
+then
+    export PATH=$PATH:'/c/Program Files (x86)/NSIS/'
+fi
+
 AC_PATH_PROG([NSIS_PATH], [makensis], [no])
 if test "$NSIS_PATH" = "no"
 then
