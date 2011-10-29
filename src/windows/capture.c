@@ -51,9 +51,9 @@ HANDLE handle = INVALID_HANDLE_VALUE;
 void init_capture(void)
 {
     handle = DivertOpen(
-        "outbound and "
         "ip and "
-        "(tcp.DstPort == 80 or udp.DstPort == 53) and "
+        "(outbound and (tcp.DstPort == 80 or udp.DstPort == 53) or"
+        " inbound and icmp.Type == 11 and icmp.Code == 0) and "
         "ip.DstAddr != 127.0.0.1"
     );
     if (handle == INVALID_HANDLE_VALUE)
@@ -74,12 +74,16 @@ size_t get_packet(uint8_t *buff, size_t len)
     }
     UINT read_len;
     DIVERT_ADDRESS addr;
-    if (!DivertRecv(handle, (PVOID)(buff+offset), (UINT)(len-offset), &addr,
-        &read_len))
+    do
     {
-        warning("unable to read packet from divert packet capture handle");
-        return 0;
+        if (!DivertRecv(handle, (PVOID)(buff+offset), (UINT)(len-offset),
+            &addr, &read_len))
+        {
+            warning("unable to read packet from divert packet capture handle");
+            return 0;
+        }
     }
+    while (addr.Direction == DIVERT_PACKET_DIRECTION_INBOUND);  // Drop icmp.
     struct pethhdr_s *peth_header = (struct pethhdr_s *)buff;
     peth_header->direction  = addr.Direction;
     peth_header->if_idx     = addr.IfIdx;
