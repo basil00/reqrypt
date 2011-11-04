@@ -46,6 +46,11 @@
 #define PROGRAM_VERSION     "@PACKAGE_VERSION@"
 
 /*
+ * The program's platform.
+ */
+#define PLATFORM            "@PLATFORM@"
+
+/*
  * 32-bit vs. 64-bit?
  */
 #define BITS                @BITS@
@@ -91,5 +96,12 @@
 #else       /* WINDOWS */
 #define MAIN                main
 #endif      /* WINDOWS */
+
+/*
+ * MACOSX is really FREEBSD
+ */
+#ifdef MACOSX
+#define FREEBSD
+#endif      /* MACOSX */
 
 #endif      /* __CFG_H */

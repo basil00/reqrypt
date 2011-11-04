@@ -15,6 +15,9 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+
+#include "cfg.h"
+
 #ifdef WINDOWS
 #include "windows/thread.h"
 #endif
@@ -26,3 +29,4 @@
 #ifdef FREEBSD
 #include "freebsd/thread.h"
 #endif
+

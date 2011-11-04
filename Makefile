@@ -62,6 +62,12 @@ client_install_freebsd: client
 	 mv $(CLIENT_PROG).sh \
 		../../$(CLIENT_PROG)-$(PACKAGE_VERSION_SHORT)-freebsd$(BITS).sh)
 
+client_install_macosx: client
+	(cd src/tools; \
+	 ./build_selfextr.sh header_freebsd.sh $(CLIENT_PROG); \
+	 mv $(CLIENT_PROG).sh \
+		../../$(CLIENT_PROG)-$(PACKAGE_VERSION_SHORT)-macosx.sh)
+
 client_install_windows: client_windows
 	(cd src; \
 	 mv $(PACKAGE_NAME)-install.exe \

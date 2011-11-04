@@ -30,6 +30,9 @@ FREEBSD:
 
     NOTE: freebsd version can only be built on a FreeBSD system.
 
+    NOTE: to run the freebsd version you need to enable ipfw and divert
+          sockets, i.e., ipfw_load="YES" and ipdivert_load="YES"
+
     1) Make sure that the following packages are installed (e.g. with
        pkg_add -r):
        - gcc
@@ -37,15 +40,24 @@ FREEBSD:
        - sudo (& add yourself as a sudoer)
        - gmake (& replace make with gmake)
 
-    2) Make sure that ipfw and divert sockets are enabled.  Add the following
-       lines to /boot/loader.conf:
-          ipfw_load="YES"
-          ipdivert_load="YES"
-
-    3) Run the following commands:
+    2) Run the following commands:
        $ autoconf -o configure configure-freebsd.ac
        $ ./configure
        $ make client_install_freebsd
+
+MACOSX:
+
+    NOTE: to run the macosx version you need to enable ipfw and divert
+          sockets.
+
+    1) Make sure the following packages are installed:
+       - gcc
+       - autoconf
+
+    2) Run the following commands:
+       $ autoconf -o configure configure-freebsd.ac
+       $ ./configure
+       $ make client_install_macosx
 
 WINDOWS [LINUX CROSS COMPILATION]:
 

@@ -49,9 +49,18 @@ case `uname -m` in
         ;;
 esac
 
+case `uname -s` in
+    Darwin)
+        AC_SUBST(PLATFORM_CAPS, MACOSX)
+        AC_SUBST(PLATFORM, macosx)
+        ;;
+    *)
+        AC_SUBST(PLATFORM_CAPS, FREEBSD)
+        AC_SUBST(PLATFORM, freebsd)
+        ;;
+esac
+
 AC_SUBST(ROOT, `pwd`)
-AC_SUBST(PLATFORM_CAPS, FREEBSD)
-AC_SUBST(PLATFORM, freebsd)
 
 AC_OUTPUT([cfg.mk src/cfg.h])
 

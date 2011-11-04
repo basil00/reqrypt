@@ -140,7 +140,7 @@ static bool iptables_clean = true;
 void init_capture(void)
 {
     // Set-up netfilterqueue.
-    trace("[linux] setting up netfilter queue %d", QUEUE_NUMBER);
+    trace("[" PLATFORM "] setting up netfilter queue %d", QUEUE_NUMBER);
     
     socket_netfilter = socket(AF_NETLINK, SOCK_RAW, NETLINK_NETFILTER);
     if (socket_netfilter < 0)
@@ -207,7 +207,7 @@ void init_capture(void)
     atexit(iptables_undo_flush);
 
     // Create a RAW socket for packet re-injection.
-    trace("[linux] setting up raw socket for re-injection");
+    trace("[" PLATFORM "] setting up raw socket for re-injection");
     socket_inject = socket(PF_INET, SOCK_RAW, IPPROTO_RAW);
     if (socket_inject < 0)
     {
@@ -500,7 +500,7 @@ static void iptables(const char *command)
     {
         panic("iptables buffer is too small");
     }
-    log("[linux] executing iptables command \"%s\"", buff);
+    log("[" PLATFORM "] executing iptables command \"%s\"", buff);
 
     // Note: never use system() because we have setuid as root.
     char *args[IPTABLES_ARGS_MAX];
@@ -577,7 +577,8 @@ static void iptables_undo_insert(const char *command)
  */
 static void iptables_undo_on_signal(int sig)
 {
-    log("[linux] caught deadly signal %d; cleaning up iptables state", sig);
+    log("[" PLATFORM "] caught deadly signal %d; cleaning up iptables state",
+        sig);
     iptables_undo_flush();
     error("caught deadly signal %d; exitting", sig);
 }

@@ -50,14 +50,22 @@
  */
 #define IPFW_BUFFSIZE   256
 #define IPFW_ARGS_MAX   32
+#ifndef MACOSX
 static const char *ipfw_divert_tcp =
-    "/sbin/ipfw 40400 add divert %d out proto tcp dst-port 80 uid %d";
+    "/sbin/ipfw 40405 add divert %d out proto tcp dst-port 80 uid %d";
 static const char *ipfw_divert_udp =
-    "/sbin/ipfw 40401 add divert %d out proto udp dst-port 53 uid %d";
+    "/sbin/ipfw 40406 add divert %d out proto udp dst-port 53 uid %d";
+#else
+// MACOSX uid is buggy
+static const char *ipfw_divert_tcp =
+    "/sbin/ipfw 40405 add divert %d out proto tcp dst-port 80";
+static const char *ipfw_divert_udp =
+    "/sbin/ipfw 40406 add divert %d out proto udp dst-port 53";
+#endif      /* MACOSX */
 static const char *ipfw_filter_icmp =
-    "/sbin/ipfw 40402 add deny in icmptypes 11";
+    "/sbin/ipfw 40407 add deny in icmptypes 11";
 static const char *ipfw_undo =
-    "/sbin/ipfw delete 40400 40401 40402";
+    "/sbin/ipfw delete 40405 40406 40407";
 
 /*
  * Prototypes.
@@ -82,7 +90,7 @@ static bool ipfw_clean = true;
 void init_capture(void)
 {
     // Set-up divert socket.
-    trace("[freebsd] setting up divert socket to port %d", DIVERT_PORT);
+    trace("[" PLATFORM "] setting up divert socket to port %d", DIVERT_PORT);
     
     socket_divert = socket(AF_INET, SOCK_RAW, IPPROTO_DIVERT);
     if (socket_divert < 0)
@@ -191,7 +199,7 @@ static void ipfw(const char *command)
     {
         panic("ipfw buffer is too small");
     }
-    log("[freebsd] executing ipfw command \"%s\"", buff);
+    log("[" PLATFORM "] executing ipfw command \"%s\"", buff);
 
     // Note: never use system() because we have setuid as root.
     char *args[IPFW_ARGS_MAX];
@@ -250,7 +258,7 @@ static void ipfw(const char *command)
  */
 static void ipfw_undo_on_signal(int sig)
 {
-    log("[freebsd] caught deadly signal %d; cleaning up ipfw state", sig);
+    log("[" PLATFORM "] caught deadly signal %d; cleaning up ipfw state", sig);
     ipfw_undo_flush();
     error("caught deadly signal %d; exitting", sig);
 }

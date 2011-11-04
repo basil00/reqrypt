@@ -20,6 +20,8 @@
 
 #include <stdbool.h>
 
+#include "cfg.h"
+
 /*
  * Options table.
  */
