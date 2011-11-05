@@ -1102,8 +1102,9 @@ void http_expand_content(http_buffer_t content,
 typedef uint16_t macro_t;
 #define MACRO_INCLUDE       0
 #define MACRO_NAME          1
-#define MACRO_PROGRAM       2
-#define MACRO_VERSION       3
+#define MACRO_PLATFORM      2
+#define MACRO_PROGRAM       3
+#define MACRO_VERSION       4
 
 struct macro_s
 {
@@ -1114,10 +1115,11 @@ struct macro_s
 
 struct macro_s macros[] = 
 {
-    {"INCLUDE",  true, MACRO_INCLUDE},
-    {"NAME",    false, MACRO_NAME},
-    {"PROGRAM", false, MACRO_PROGRAM},
-    {"VERSION", false, MACRO_VERSION}
+    {"INCLUDE",   true, MACRO_INCLUDE},
+    {"NAME",     false, MACRO_NAME},
+    {"PLATFORM", false, MACRO_PLATFORM},
+    {"PROGRAM",  false, MACRO_PROGRAM},
+    {"VERSION",  false, MACRO_VERSION}
 };
 
 /*
@@ -1164,6 +1166,9 @@ void http_expand_macro(const char *macro_name, const char *arg,
             }
             case MACRO_NAME:
                 http_buffer_puts(buff, request->name);
+                return;
+            case MACRO_PLATFORM:
+                http_buffer_puts(buff, PLATFORM);
                 return;
             case MACRO_PROGRAM:
                 http_buffer_puts(buff, PROGRAM_NAME_LONG);

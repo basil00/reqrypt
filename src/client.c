@@ -56,8 +56,8 @@ struct config_s config;
 int MAIN(int argc, char **argv)
 {
     // First print GPL information:
-    printf("%s %s Copyright (C) 2011 basil\n", PROGRAM_NAME_LONG,
-        PROGRAM_VERSION);
+    printf("%s %s [%s] Copyright (C) 2011 basil\n", PROGRAM_NAME_LONG,
+        PROGRAM_VERSION, PLATFORM);
     puts("License GPLv3+: GNU GPL version 3 or later "
         "<http://gnu.org/licenses/gpl.html>.");
     puts("This is free software: you are free to change and redistribute it.");
