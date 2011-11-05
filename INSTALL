@@ -1,14 +1,12 @@
 BUILD INSTRUCTIONS:
-==================
+===================
 
 NOTES:
 
 Linux users can build with the build.sh script.  This script will build
-the Linux client and server, and Windows clients.  The usage is:
-    $ ./build.sh -d <divert-install-path>
-where <divert-install-path> is a path to a WinDivert binary package.
-WinDivert binary package can be downloaded from:
-    http://reqrypt.org/divert/
+the Linux client and server, and Windows clients.  The script will attempt
+to automatically download the WinDivert dependency, otherwise it can be
+specified by the '-d <divert-install-path>' option.
 
 LINUX:
 

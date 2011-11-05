@@ -46,8 +46,19 @@ make server_install
 set +x
 if [ "$DIVERT" = "" ]
 then
-    echo "$0: run with \"-d <divert-install-path>\" to build windows client"
-    exit 0
+    if [ ! -d "divert/" ]
+    then
+        wget http://reqrypt.org/download/divert-mingw.tar.gz
+        tar xvfz divert-mingw.tar.gz
+        set -x
+        if [ ! -d "divert/" ]
+        then
+            echo "$0: unable to download divert package; cannot build \
+                windows client" 1>&2
+            exit 1
+        fi
+    fi
+    DIVERT=divert/
 fi
 set -x
 

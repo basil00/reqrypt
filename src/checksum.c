@@ -25,46 +25,45 @@
 /*
  * Prototypes.
  */
-static uint16_t checksum(const void *data, size_t size);
-static uint16_t checksum_add(uint16_t a, uint16_t b);
+static uint16_t checksum(const void *pseudo_header, size_t pseudo_header_size,
+    const void *data, size_t size);
 static uint16_t tcp_udp_checksum(struct iphdr *ip_header);
 
 /*
  * Calculate a checksum.
  */
-static uint16_t checksum(const void *data, size_t size)
+static uint16_t checksum(const void *pseudo_header, size_t pseudo_header_size,
+    const void *data, size_t size)
 {
-    register const uint16_t *data16 = (const uint16_t *)data;
-    register size_t size16 = size >> 1;
+    register const uint16_t *data16 = (const uint16_t *)pseudo_header;
+    register size_t len16 = pseudo_header_size >> 1;
     register uint32_t sum = 0;
+    size_t i;
 
-    for (size_t i = 0; i < size16; i++)
+    // Pseudo header:
+    for (i = 0; i < len16; i++)
     {
-        uint16_t val16 = data16[i];
-        sum += (uint32_t)ntohs(val16);
+        sum += (uint32_t)data16[i];
+    }
+
+    // Main data:
+    data16 = (const uint16_t *)data;
+    len16 = size >> 1;
+    for (i = 0; i < len16; i++)
+    {
+        sum += (uint32_t)data16[i];
     }
 
     if (size & 0x1)
     {
         const uint8_t *data8 = (const uint8_t *)data;
-        uint16_t val16 = (uint16_t)data8[size-1];
-        sum += (uint32_t)ntohs(val16);
+        sum += (uint16_t)data8[size-1];
     }
 
     sum = (sum & 0xFFFF) + (sum >> 16);
     sum += (sum >> 16);
     sum = ~sum;
-    return htons((uint16_t)sum);
-}
-
-/*
- * Add two checksums together.
- */
-static uint16_t checksum_add(uint16_t a, uint16_t b)
-{
-    uint32_t sum = (uint32_t)ntohs(~a) + (uint32_t)ntohs(~b);
-    sum += (sum >> 16);
-    return htons((uint16_t)sum);
+    return (uint16_t)sum;
 }
 
 /*
@@ -72,7 +71,7 @@ static uint16_t checksum_add(uint16_t a, uint16_t b)
  */
 extern uint16_t ip_checksum(struct iphdr *ip_header)
 {
-    return checksum(ip_header, ip_header->ihl*sizeof(uint32_t));
+    return checksum(NULL, 0, ip_header, ip_header->ihl*sizeof(uint32_t));
 }
 
 /*
@@ -117,10 +116,8 @@ static uint16_t tcp_udp_checksum(struct iphdr *ip_header)
     struct tcphdr *tcp_header = (struct tcphdr *)((const uint8_t *)ip_header +
         ip_header_size);
 
-    uint16_t sum1 = checksum(&pseudo_header, sizeof(pseudo_header));
-    uint16_t sum2 = checksum(tcp_header, tcp_size);
-
-    return checksum_add(sum1, sum2);
+    return checksum(&pseudo_header, sizeof(pseudo_header), tcp_header,
+        tcp_size);
 }
 
 /*
@@ -128,6 +125,6 @@ static uint16_t tcp_udp_checksum(struct iphdr *ip_header)
  */
 extern uint16_t icmp_checksum(struct icmphdr *icmp_header, size_t size)
 {
-    return checksum(icmp_header, size);
+    return checksum(NULL, 0, icmp_header, size);
 }
 
