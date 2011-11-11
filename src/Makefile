@@ -26,6 +26,7 @@ CLIENT_OBJS = \
     cktp_url.o \
     config.o \
     encodings/aes.o \
+    encodings/aes_hardware.o \
     encodings/crypt.o \
     encodings/pad.o \
     encodings/natural.o \
@@ -51,6 +52,7 @@ SERVER_OBJS = \
     cktp_server.o \
     cktp_url.o \
     encodings/aes.o \
+    encodings/aes_hardware.o \
     encodings/crypt.o \
     encodings/pad.o \
     linux/misc.o \
@@ -62,6 +64,7 @@ SERVER_OBJS = \
 CTOOL_OBJS = \
     base64.o \
     encodings/aes.o \
+    encodings/aes_hardware.o \
     encodings/crypt.o
 
 client: CFLAGS = $(CLIENT_CFLAGS)
@@ -74,6 +77,8 @@ client32: CC := $(CC) -m32
 client32: client
 
 encodings/natural.o: CFLAGS = $(CLIENT_CFLAGS) -O3
+encodings/aes_hardware.o: CFLAGS = $(CLIENT_CFLAGS) -maes -mssse3 \
+    -flax-vector-conversions
 
 client_cap: client
 	sudo setcap cap_net_raw,cap_net_admin,cap_setgid,cap_setuid=ep \

@@ -1,6 +1,6 @@
 /*
- * aes.h
- * (C) 2010, all rights reserved,
+ * aes_hardware.h
+ * (C) 2011, all rights reserved,
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,12 +16,16 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __AES_H
-#define __AES_H
+#ifndef __AES_HARDWARE_H
+#define __AES_HARDWARE_H
 
-#define AES_ROUNDS      10
+#include <stdbool.h>
+#include <stdint.h>
 
-extern void aes_expandkey(const uint8_t *key, size_t keysize, uint8_t *ekey);
-extern void aes_encrypt(const uint8_t *v, const uint32_t *rk, uint8_t *o);
+extern bool aes_hardware_test(void);
+extern void aes_hardware_expandkey(const uint8_t *key, size_t keysize,
+    uint8_t *ekey);
+extern void aes_hardware_encrypt(const uint8_t *v, const uint32_t *rk,
+    uint8_t *o);
 
-#endif      /* __AES_H */
+#endif      /* __AES_HARDWARE_H */

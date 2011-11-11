@@ -28,6 +28,7 @@ OBJS = \
     cktp_url.obj \
     config.obj \
     encodings/aes.obj \
+    encodings/aes_hardware.obj \
     encodings/crypt.obj \
     encodings/pad.obj \
     encodings/natural.obj \
@@ -57,6 +58,10 @@ $(PLATFORM)/resources.obj: $(PLATFORM)/resources.rc
 
 %.obj: %.c http_data.c install_data.c
 	$(CC) $(CFLAGS) -o $@ -c $<
+
+encodings/natural.obj: CFLAGS = $(CLIENT_CFLAGS) -O3
+encodings/aes_hardware.obj: CFLAGS = $(CLIENT_CFLAGS) -maes -mssse3 \
+    -flax-vector-conversions
 
 http_data.c: ui/* tools/file2c.exe
 	(cd ui/; ../tools/file2c.exe * > ../http_data.c)

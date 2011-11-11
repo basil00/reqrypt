@@ -106,6 +106,7 @@
 #include "cktp_encoding.h"
 #include "cookie.h"
 #include "encodings/aes.h"
+#include "encodings/aes_hardware.h"
 #include "encodings/crypt.h"
 
 #ifdef CLIENT
@@ -294,6 +295,7 @@ static void xxtea_encrypt(const uint32_t *v, const uint32_t *k, uint32_t *r);
 typedef void (*expandkeyfunc_t)(const void *key, size_t keysize, void *ekey);
 typedef void (*encryptfunc_t)(const void *block, const void *key,
     void *result);
+typedef bool (*testfunc_t)(void);
 
 /*
  * Cipher representation.
@@ -304,6 +306,7 @@ struct cipher_s
     size_t          ekeysize;           // Expanded key size
     expandkeyfunc_t expandkey;          // Optional expand key
     encryptfunc_t   encrypt;            // Encrypt
+    testfunc_t      test;               // Hardware cipher supported?
 };
 
 /*
@@ -315,14 +318,30 @@ struct cipher_s ciphers[] =
         "aes",
         CRYPT_KEY_SIZE*(AES_ROUNDS+1),
         (expandkeyfunc_t)aes_expandkey,
-        (encryptfunc_t)aes_encrypt
+        (encryptfunc_t)aes_encrypt,
+        NULL
     },
     {   // XXTEA (128 block size)
         "xxtea",
         CRYPT_KEY_SIZE,
         (expandkeyfunc_t)xxtea_expandkey,
-        (encryptfunc_t)xxtea_encrypt
+        (encryptfunc_t)xxtea_encrypt,
+        NULL
     }
+};
+
+/*
+ * List of hardware-accelerated ciphers.
+ */
+struct cipher_s hardware_ciphers[] =
+{
+    {   // AES128
+        "aes",
+        CRYPT_KEY_SIZE*(AES_ROUNDS+1),
+        (expandkeyfunc_t)aes_hardware_expandkey,
+        (encryptfunc_t)aes_hardware_encrypt,
+        (testfunc_t)aes_hardware_test
+    }      
 };
 
 /*
@@ -424,6 +443,7 @@ static void hash(const struct cipher_s *cipher, uint8_t *data, size_t datasize,
     uint8_t *hashval);
 static int crypt_init(const cktp_enc_lib_t lib, const char *protocol,
     const char *options, size_t options_size, state_t *stateptr);
+static struct cipher_s *crypt_cipher_search(const char *name);
 static void crypt_free(state_t state);
 static size_t crypt_overhead(state_t state);
 static const char *crypt_error_string(state_t state, int err);
@@ -540,11 +560,7 @@ static int crypt_init(const cktp_enc_lib_t lib, const char *protocol,
                 {
                     return CRYPT_ERROR_REPEATED_URL_PARAMETER;
                 }
-                struct cipher_s key;
-                key.name = val.val.str_val;
-                cipher = bsearch(&key, ciphers,
-                    sizeof(ciphers) / sizeof(struct cipher_s),
-                    sizeof(struct cipher_s), cipher_s_compare);
+                cipher = crypt_cipher_search(val.val.str_val);
                 if (cipher == NULL)
                 {
                     return CRYPT_ERROR_BAD_URL_PARAMETER;
@@ -636,6 +652,26 @@ static int crypt_init(const cktp_enc_lib_t lib, const char *protocol,
     
     *stateptr = state;
     return 0;
+}
+
+/*
+ * Search for a given cipher.
+ */
+static struct cipher_s *crypt_cipher_search(const char *name)
+{
+    struct cipher_s key;
+    key.name = name;
+    struct cipher_s *cipher = bsearch(&key, hardware_ciphers,
+        sizeof(hardware_ciphers) / sizeof(struct cipher_s),
+        sizeof(struct cipher_s), cipher_s_compare);
+    if (cipher != NULL &&
+        (cipher->test == NULL || cipher->test()))
+    {
+        return cipher;
+    }
+    cipher = bsearch(&key, ciphers, sizeof(ciphers) / sizeof(struct cipher_s),
+        sizeof(struct cipher_s), cipher_s_compare);
+    return cipher;
 }
 
 /*
@@ -1975,11 +2011,7 @@ int main(int argc, const char **argv)
         usage();
         return EXIT_FAILURE;
     }
-    struct cipher_s key;
-    key.name = argv[1];
-    struct cipher_s *cipher = bsearch(&key, ciphers,
-        sizeof(ciphers) / sizeof(struct cipher_s), sizeof(struct cipher_s),
-        cipher_s_compare);
+    struct cipher_s *cipher = crypt_cipher_search(argv[1]);
     if (cipher == NULL)
     {
         fprintf(stderr, "error: unknown cipher %s\n", argv[1]);
