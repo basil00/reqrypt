@@ -44,6 +44,9 @@ static uint64_t data_hash(void *data0, size_t data_size, uint64_t hash);
 /*
  * Track a packet.  Determine its hash value and how many times it has been
  * repeated.
+ *
+ * NOTE: packet_table is not multi-thread safe.  We do not care since, at
+ *       worst, we get false negatives, which are tolerable.
  */
 void packet_track(uint8_t *packet, uint64_t *hash, unsigned *repeat)
 {

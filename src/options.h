@@ -37,6 +37,8 @@ struct options_s
 #endif
     bool seen_no_launch_ui;
     bool seen_no_ui;
+    bool seen_num_threads;
+    int val_num_threads;
     bool seen_ui_port;
     int val_ui_port;
     bool seen_version;

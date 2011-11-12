@@ -76,6 +76,8 @@ struct opt_info_s opt_info[] =
 #endif
     {"no-launch-ui", OPT_BOOL, &options.seen_no_launch_ui, NULL},
     {"no-ui",        OPT_BOOL, &options.seen_no_ui,        NULL},
+    {"num-threads",  OPT_INT,  &options.seen_num_threads,
+        &options.val_num_threads},
     {"ui-port",      OPT_INT,  &options.seen_ui_port,
         &options.val_ui_port},
     {"version",      OPT_BOOL, &options.seen_version,      NULL}
@@ -216,6 +218,8 @@ static void help(void)
     puts("\t\tDo not automatically launch the user interface.");
     puts("\t--no-ui");
     puts("\t\tDisable the user interface.");
+    puts("\t--num-threads NUMBER");
+    puts("\t\tUse NUMBER threads to process packets.");
     puts("\t--ui-port PORT");
     puts("\t\tUse PORT for the user interface.");
     puts("\t--version");

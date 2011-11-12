@@ -38,10 +38,14 @@
 #include "thread.h"
 #include "tunnel.h"
 
+#define NUM_THREADS_DEFAULT     3
+#define NUM_THREADS_MAX         16
+
 /*
  * Prototypes.
  */
 static void *configuration_thread(void *arg);
+static void *worker_thread(void *arg);
 static bool user_exit(http_buffer_t buff);
 
 /*
@@ -82,6 +86,16 @@ int MAIN(int argc, char **argv)
     trace("initialising sockets");
     init_sockets();
 
+    // Get number of threads.
+    int num_threads =
+        (options_get()->seen_num_threads?  options_get()->val_num_threads:
+            NUM_THREADS_DEFAULT);
+    if (num_threads < 1 || num_threads > NUM_THREADS_MAX)
+    {
+        error("unable to spawn %d threads; expected a number within the "
+            "range 1..%u", num_threads, NUM_THREADS_MAX);
+    }
+
     // Create configuration server thread.
     trace("launching configuration server thread");
     if (thread_lock_init(&config_lock))
@@ -90,9 +104,9 @@ int MAIN(int argc, char **argv)
     }
     thread_t config_thread;
     if (!options_get()->seen_no_ui &&
-        thread_create(&config_thread, configuration_thread, NULL))
+        thread_create(&config_thread, configuration_thread, NULL) != 0)
     {
-        error("unable to initialise configuration server thread");
+        error("unable to create configuration server thread");
     }
 
     // Open the packet capture/injection device driver.
@@ -113,6 +127,23 @@ int MAIN(int argc, char **argv)
         sleeptime(UINT64_MAX);
     }
 
+    // Start worker threads.
+    for (int i = 1; i < num_threads; i++)
+    {
+        thread_t work_thread;
+        if (thread_create(&work_thread, worker_thread, (void *)i) != 0)
+        {
+            error("unable to create worker thread");
+        }
+    }
+    worker_thread((void *)0);
+
+    return EXIT_SUCCESS;
+}
+
+
+static void *worker_thread(void *arg)
+{
     // RNG for packet_dispatch
     random_state_t rng = random_init();
 

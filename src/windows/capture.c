@@ -80,7 +80,7 @@ size_t get_packet(uint8_t *buff, size_t len)
             &addr, &read_len))
         {
             warning("unable to read packet from divert packet capture handle");
-            return 0;
+            continue;
         }
     }
     while (addr.Direction == DIVERT_PACKET_DIRECTION_INBOUND);  // Drop icmp.
