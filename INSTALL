@@ -6,7 +6,7 @@ NOTES:
 Linux users can build with the build.sh script.  This script will build
 the Linux client and server, and Windows clients.  The script will attempt
 to automatically download the WinDivert dependency, otherwise it can be
-specified by the '-d <divert-install-path>' option.
+specified by the '-d <windivert-install-path>' option.
 
 LINUX:
 
@@ -60,7 +60,7 @@ MACOSX:
 WINDOWS [LINUX CROSS COMPILATION]:
 
     1) Make sure the following packages are installed:
-       - WinDivert      [http://reqrypt.org/divert/]
+       - WinDivert      [http://reqrypt.org/windivert.html]
        - mingw-w64
        - nsis
        - autoconf
@@ -69,17 +69,19 @@ WINDOWS [LINUX CROSS COMPILATION]:
 
        (32-bit version)
        $ autoconf -o configure configure-windows.ac
-       $ ./configure --host=i586-mingw32msvc 'DIVERT=path/to/divert/'
+       $ ./configure --host=i686-w64-mingw32 'DIVERT=path/to/windivert/'
        $ make client_install_windows
 
        (64-bit version)
        $ autoconf -o configure configure-windows.ac
-       $ ./configure --host=amd64-mingw32msvc 'DIVERT=path/to/divert/'
+       $ ./configure --host=x86_64-w64-mingw32 'DIVERT=path/to/windivert/'
        $ make client_install_windows
 
 WINDOWS [NATIVE COMPILATION]:
 
     Note: This method cannot be used to build the 64-bit version.
+    Note: This method is no longer supported, use Linux cross-compilation
+          instead.
 
     1) Make sure the following packages are installed:
        - WinDivert      [http://reqrypt.org/divert/]

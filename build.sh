@@ -43,29 +43,30 @@ make client_install32
 make server_install
 
 # Build Windows 64/32-bit
+DIVERT_VERSION=WinDivert-1.0.4-MINGW
 set +x
 if [ "$DIVERT" = "" ]
 then
-    if [ ! -d "divert/" ]
+    if [ ! -d "$DIVERT_VERSION/" ]
     then
-        wget http://reqrypt.org/download/divert-mingw.tar.gz
-        tar xvfz divert-mingw.tar.gz
+        wget http://reqrypt.org/download/$DIVERT_VERSION.zip
+        unzip $DIVERT_VERSION.zip
         set -x
-        if [ ! -d "divert/" ]
+        if [ ! -d "$DIVERT_VERSION/" ]
         then
             echo "$0: unable to download divert package; cannot build \
                 windows client" 1>&2
             exit 1
         fi
     fi
-    DIVERT=divert/
+    DIVERT=$DIVERT_VERSION/
 fi
 set -x
 
 rm -rf autom4te.cache cfg.mk config.log config.status configure
 autoconf -o configure configure-windows.ac
-./configure --host=i586-mingw32msvc "DIVERT=$DIVERT"
+./configure --host=i686-w64-mingw32 "DIVERT=$DIVERT"
 make client_install_windows
-./configure --host=amd64-mingw32msvc "DIVERT=$DIVERT"
+./configure --host=x86_64-w64-mingw32 "DIVERT=$DIVERT"
 make client_install_windows
 

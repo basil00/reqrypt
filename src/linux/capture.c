@@ -31,8 +31,6 @@
  *      however:
  *          - this introduced a dependency, and these libraries are not always
  *            installed by default
- *          - static compilation is not an option because the libraries use
- *            GPLv2, and this software is GPLv3
  *          - the existing API is terrible -- the callback model does not fit
  *            the capture.h API without lots of hacky-ness.
  *      In the end we cut out the middle man and used netlink sockets
@@ -51,8 +49,8 @@
 #include <string.h>
 #include <sys/wait.h>
 
-// To work around linux header error:
-#define aligned_be64 unsigned long long
+// Use full path to avoid ambiguity:
+#include "/usr/include/linux/socket.h"
 
 #include <linux/netfilter.h>
 #include <linux/netfilter/nfnetlink.h>

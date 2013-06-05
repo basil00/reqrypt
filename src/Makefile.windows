@@ -47,8 +47,8 @@ OBJS = \
     $(PLATFORM)/misc.obj \
     $(PLATFORM)/resources.obj
 
-client: CFLAGS = $(CLIENT_CFLAGS) -I$(DIVERT_ROOT)/
-client: CLIBS = -lws2_32 -lkernel32 -ldivert -L$(DIVERT_ROOT)/$(ARCH)/
+client: CFLAGS = $(CLIENT_CFLAGS) -I$(DIVERT_ROOT)/include/
+client: CLIBS = -lws2_32 -lkernel32 -lWinDivert -L$(DIVERT_ROOT)/$(ARCH)/
 client: $(OBJS)
 	$(CC) -o $(CLIENT_PROG).exe $(OBJS) -Wl,-subsystem,windows $(CLIBS)
 	strip $(CLIENT_PROG).exe
@@ -75,14 +75,14 @@ tools/file2c.exe: tools/file2c.c
 	$(CC) $(CLIENT_CFLAGS) -o $@ $<
 
 install: client
-	cp "$(DIVERT_ROOT)/$(ARCH)/divert.sys" \
-        "$(ROOT)/src/$(PLATFORM)/install/divert.sys"
-	cp "$(DIVERT_ROOT)/$(ARCH)/divert.dll" \
-        "$(ROOT)/src/$(PLATFORM)/install/divert.dll"
+	cp "$(DIVERT_ROOT)/$(ARCH)/WinDivert.sys" \
+        "$(ROOT)/src/$(PLATFORM)/install/WinDivert.sys"
+	cp "$(DIVERT_ROOT)/$(ARCH)/WinDivert.dll" \
+        "$(ROOT)/src/$(PLATFORM)/install/WinDivert.dll"
 	cp "$(DIVERT_ROOT)/$(ARCH)/WdfCoInstaller01009.dll" \
         "$(ROOT)/src/$(PLATFORM)/install/WdfCoInstaller01009.dll"
-	cp "$(DIVERT_ROOT)/divert.inf" \
-        "$(ROOT)/src/$(PLATFORM)/install/divert.inf"
+	cp "$(DIVERT_ROOT)/$(ARCH)/WinDivert.inf" \
+        "$(ROOT)/src/$(PLATFORM)/install/WinDivert.inf"
 	cp "$(ROOT)/src/$(CLIENT_PROG).exe" \
         "$(ROOT)/src/$(PLATFORM)/install/$(CLIENT_PROG).exe"
 	cp "$(ROOT)/src/$(PLATFORM)/manifest.xml" \

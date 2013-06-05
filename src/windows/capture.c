@@ -54,8 +54,8 @@ void init_capture(void)
         "ip and "
         "(outbound and (tcp.DstPort == 80 or udp.DstPort == 53) or"
         " inbound and icmp.Type == 11 and icmp.Code == 0) and "
-        "ip.DstAddr != 127.0.0.1"
-    );
+        "ip.DstAddr != 127.0.0.1",
+        DIVERT_LAYER_NETWORK, -501, 0);
     if (handle == INVALID_HANDLE_VALUE)
     {
         error("unable to open divert packet capture handle");
