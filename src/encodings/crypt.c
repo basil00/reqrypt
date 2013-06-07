@@ -1162,7 +1162,7 @@ static int crypt_handshake_reply(state_t state, uint8_t *data, size_t size)
             hash(state->cipher, t, sizeof(t), key);
 
             // Decrypt the rest of the message:
-            uint8_t ekey[state->cipher->ekeysize];
+            uint8_t ekey[state->cipher->ekeysize] __attribute__((aligned(16)));
             state->cipher->expandkey(key, sizeof(key), ekey);
             uint64_t mac = decrypt(state->cipher, (uint8_t *)&rep->reply.iv,
                 sizeof(rep->reply.iv), rep->reply.seq2, ekey,
@@ -1635,7 +1635,7 @@ static int crypt_server_decode(state_t state, uint32_t *source_addr,
                 signed_data->encrypted.id, signed_data->encrypted.key);
             state->lib->random(state->rng, &signed_data->iv,
                 sizeof(signed_data->iv));
-            uint8_t ekey[state->cipher->ekeysize];
+            uint8_t ekey[state->cipher->ekeysize] __attribute__((aligned(16)));
             state->cipher->expandkey(request_key, sizeof(request_key), ekey);
             rep->reply.seq2 = crypt_next_seq(state);
             signed_data->mac = encrypt(state->cipher,
@@ -2033,7 +2033,7 @@ int main(int argc, const char **argv)
         {
             key[i] = (uint8_t)rand();
         }
-        uint8_t ekey[cipher->ekeysize];
+        uint8_t ekey[cipher->ekeysize] __attribute__((aligned(16)));
         cipher->expandkey(key, sizeof(key), ekey);
         uint8_t ciphertext[CRYPT_BLOCK_SIZE];
         cipher->encrypt(plaintext, ekey, ciphertext);
@@ -2295,7 +2295,7 @@ static uint64_t decrypt(const struct cipher_s *cipher, const uint8_t *iv,
 static void crypt(const struct cipher_s *cipher, const uint8_t *iv,
     size_t ivsize, const uint8_t *key, uint8_t *data, size_t datasize)
 {
-    uint8_t ekey[cipher->ekeysize];
+    uint8_t ekey[cipher->ekeysize] __attribute__((aligned(16)));
     cipher->expandkey(key, CRYPT_KEY_SIZE, ekey);
 
     uint8_t block[CRYPT_BLOCK_SIZE];
@@ -2327,7 +2327,7 @@ static void hash(const struct cipher_s *cipher, uint8_t *data, size_t datasize,
     memcpy(block, p0 + sizeof(uint64_t), CRYPT_HASH_SIZE);
 
     // Hash message:
-    uint8_t ekey[cipher->ekeysize];
+    uint8_t ekey[cipher->ekeysize] __attribute__((aligned(16)));
     uint8_t block_copy[CRYPT_BLOCK_SIZE];
     for (size_t i = 0; i < datasize; i += CRYPT_HASH_SIZE)
     {

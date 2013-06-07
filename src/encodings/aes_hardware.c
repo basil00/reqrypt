@@ -23,21 +23,21 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdlib.h>
-#include <wmmintrin.h>
 
 #include "aes_hardware.h"
 
 /*
  * Beautification.
  */
-typedef __m128i int128_t;
+typedef long long int int128_t __attribute__ ((vector_size (16)));
 
-#define aes_keygen_assist           _mm_aeskeygenassist_si128
-#define aes_enc                     _mm_aesenc_si128
-#define aes_enc_last                _mm_aesenclast_si128
+#define aes_enc                     __builtin_ia32_aesenc128
+#define aes_enc_last                __builtin_ia32_aesenclast128
+#define aes_keygen_assist           __builtin_ia32_aeskeygenassist128
 
-#define bshuffle                    _mm_shuffle_epi32
-#define lshift4                     _mm_slli_si128
+#define bshuffle                    __builtin_ia32_pshufd
+#define lshift4(a, b)               \
+    __builtin_ia32_pslldqi128((a), (b) * 8)
 
 #define cpuid(f, ax, bx, cx, dx)    \
     __asm__ __volatile__ ("cpuid" : "=a" (ax), "=b" (bx), "=c" (cx), \

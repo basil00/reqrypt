@@ -2,6 +2,7 @@
 
 # BROWSER=firefox
 # BROWSER=google-chrome
+# BROWSER=chromium
 # BROWSER=opera
 # BROWSER=open		# (for MacOSX only)
 
@@ -13,17 +14,12 @@ fi
 
 if [ -z "$BROWSER" ]
 then
-	BROWSER=firefox
+	BROWSER=x-www-browser
 fi
 
 if [ -x "`which $BROWSER`" ]
 then
 	exec $BROWSER "$1"
-fi
-
-if [ "$BROWSER" = "firefox" -a -x "`which firefox3`" ]
-then
-	exec firefox3 "$1"
 fi
 
 echo "$0: error: browser '$BROWSER' not found" >&2
