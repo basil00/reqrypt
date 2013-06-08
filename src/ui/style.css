@@ -36,13 +36,17 @@ div.tabs
     padding: 0 0 0 1em;
 }
 
+a
+{
+    text-decoration: none;
+}
+
 a.tab
 {
     background-color: #4444bb;
     color: #ffffff;
     margin: 0 0.2em 0 0;
     padding: 2px 1em 2px 1em;
-    text-decoration: none;
     -moz-border-radius-topright: 7px;
     -moz-border-radius-topleft: 7px;
     -webkit-border-top-right-radius: 7px;

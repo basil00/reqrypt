@@ -1,6 +1,6 @@
 Package: reqrypt
-Version: 0.2
-Maintainer: Basil <basil@thisisnotmyrealemail.com>
+Version: 1.0
+Maintainer: Basil <basil@reqrypt.org>
 Section: net
 Priority: optional
 Homepage: http://reqrypt.org
