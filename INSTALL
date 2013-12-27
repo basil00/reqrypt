@@ -84,7 +84,7 @@ WINDOWS [NATIVE COMPILATION]:
           instead.
 
     1) Make sure the following packages are installed:
-       - WinDivert      [http://reqrypt.org/divert/]
+       - WinDivert      [http://reqrypt.org/windivert.html]
        - MinGW
        - MSYS
        - NSIS

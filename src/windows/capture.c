@@ -25,7 +25,7 @@
 
 #define UINT8   unsigned char
 #define UINT16  unsigned short
-#include "divert.h"
+#include "windivert.h"
 
 /*
  * Pseudo ethhdr stores the DIVERT_ADDRESS
@@ -50,12 +50,12 @@ HANDLE handle = INVALID_HANDLE_VALUE;
  */
 void init_capture(void)
 {
-    handle = DivertOpen(
+    handle = WinDivertOpen(
         "ip and "
         "(outbound and (tcp.DstPort == 80 or udp.DstPort == 53) or"
         " inbound and icmp.Type == 11 and icmp.Code == 0) and "
         "ip.DstAddr != 127.0.0.1",
-        DIVERT_LAYER_NETWORK, -501, 0);
+        WINDIVERT_LAYER_NETWORK, -501, 0);
     if (handle == INVALID_HANDLE_VALUE)
     {
         error("unable to open divert packet capture handle");
@@ -73,17 +73,17 @@ size_t get_packet(uint8_t *buff, size_t len)
         error("unable to read packet; buffer is too small");
     }
     UINT read_len;
-    DIVERT_ADDRESS addr;
+    WINDIVERT_ADDRESS addr;
     do
     {
-        if (!DivertRecv(handle, (PVOID)(buff+offset), (UINT)(len-offset),
+        if (!WinDivertRecv(handle, (PVOID)(buff+offset), (UINT)(len-offset),
             &addr, &read_len))
         {
             warning("unable to read packet from divert packet capture handle");
             continue;
         }
     }
-    while (addr.Direction == DIVERT_PACKET_DIRECTION_INBOUND);  // Drop icmp.
+    while (addr.Direction == WINDIVERT_DIRECTION_INBOUND);  // Drop icmp.
     struct pethhdr_s *peth_header = (struct pethhdr_s *)buff;
     peth_header->direction  = addr.Direction;
     peth_header->if_idx     = addr.IfIdx;
@@ -106,7 +106,7 @@ void inject_packet(uint8_t *buff, size_t len)
         warning("unable to inject packet; buffer is too small");
     }
     struct pethhdr_s *peth_header = (struct pethhdr_s *)buff;
-    DIVERT_ADDRESS addr;
+    WINDIVERT_ADDRESS addr;
     addr.Direction = peth_header->direction;
     addr.IfIdx     = peth_header->if_idx;
     addr.SubIfIdx  = peth_header->sub_if_idx;
@@ -115,7 +115,7 @@ void inject_packet(uint8_t *buff, size_t len)
     buff += offset;
 
     UINT write_len;
-    if (!DivertSend(handle, (PVOID)buff, (UINT)len, &addr, &write_len) ||
+    if (!WinDivertSend(handle, (PVOID)buff, (UINT)len, &addr, &write_len) ||
         (UINT)len != write_len)
     {
         warning("unable to inject packet of size " SIZE_T_FMT " to "

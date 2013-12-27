@@ -75,14 +75,12 @@ tools/file2c.exe: tools/file2c.c
 	$(CC) $(CLIENT_CFLAGS) -o $@ $<
 
 install: client
-	cp "$(DIVERT_ROOT)/$(ARCH)/WinDivert.sys" \
-        "$(ROOT)/src/$(PLATFORM)/install/WinDivert.sys"
+	cp "$(DIVERT_ROOT)/x86/WinDivert32.sys" \
+        "$(ROOT)/src/$(PLATFORM)/install/WinDivert32.sys"
+	cp "$(DIVERT_ROOT)/amd64/WinDivert64.sys" \
+        "$(ROOT)/src/$(PLATFORM)/install/WinDivert64.sys"
 	cp "$(DIVERT_ROOT)/$(ARCH)/WinDivert.dll" \
         "$(ROOT)/src/$(PLATFORM)/install/WinDivert.dll"
-	cp "$(DIVERT_ROOT)/$(ARCH)/WdfCoInstaller01009.dll" \
-        "$(ROOT)/src/$(PLATFORM)/install/WdfCoInstaller01009.dll"
-	cp "$(DIVERT_ROOT)/$(ARCH)/WinDivert.inf" \
-        "$(ROOT)/src/$(PLATFORM)/install/WinDivert.inf"
 	cp "$(ROOT)/src/$(CLIENT_PROG).exe" \
         "$(ROOT)/src/$(PLATFORM)/install/$(CLIENT_PROG).exe"
 	cp "$(ROOT)/src/$(PLATFORM)/manifest.xml" \

@@ -14,10 +14,10 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-AC_INIT(reqrypt, 1.0)
+AC_INIT(reqrypt, 1.1)
 AC_SUBST(PACKAGE_NAME_LONG, "ReQrypt")
-AC_SUBST(PACKAGE_VERSION, "1.0")
-AC_SUBST(PACKAGE_VERSION_SHORT, "1.0")
+AC_SUBST(PACKAGE_VERSION, "1.1")
+AC_SUBST(PACKAGE_VERSION_SHORT, "1.1")
 
 error=no
 
