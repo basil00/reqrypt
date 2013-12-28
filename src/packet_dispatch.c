@@ -199,8 +199,8 @@ void packet_dispatch(struct config_s *config, random_state_t rng,
                 &tunneled_data_size);
             uint8_t *packet_copy = buff;
             buff += tunneled_header_size + tunneled_data_size;
-            memcpy(packet_copy, packet, sizeof(struct ethhdr));
-            memcpy(packet_copy + sizeof(struct ethhdr), tunneled_packets[i],
+            memmove(packet_copy, packet, sizeof(struct ethhdr));
+            memmove(packet_copy + sizeof(struct ethhdr), tunneled_packets[i],
                 tunneled_header_size);
 
             protocol->generate(packet_copy + sizeof(struct ethhdr),
@@ -330,7 +330,7 @@ static uint8_t *ip_fragment(uint8_t *packet, size_t split, uint8_t *buff,
     }
 
     // Create the first fragment:
-    memcpy(buff, packet, split + sizeof(struct ethhdr));
+    memmove(buff, packet, split + sizeof(struct ethhdr));
     struct iphdr *ip_header_1 = (struct iphdr *)(buff + sizeof(struct ethhdr));
 
     ip_header_1->tot_len  = htons(split);
@@ -343,10 +343,10 @@ static uint8_t *ip_fragment(uint8_t *packet, size_t split, uint8_t *buff,
     // Create the second fragment:
     size_t header_size_2 = sizeof(struct ethhdr) +
         ip_header->ihl*sizeof(uint32_t);
-    memcpy(buff, packet, header_size_2);
+    memmove(buff, packet, header_size_2);
     size_t data_size_2 = ntohs(ip_header->tot_len) - split;
     
-    memcpy(buff + header_size_2, packet + split + sizeof(struct ethhdr),
+    memmove(buff + header_size_2, packet + split + sizeof(struct ethhdr),
         data_size_2);
     struct iphdr *ip_header_2 = (struct iphdr *)(buff + sizeof(struct ethhdr));
     ip_header_2->tot_len = htons(header_size_2 + data_size_2 -
@@ -391,7 +391,7 @@ static uint8_t *tcp_fragment(uint8_t *packet, size_t split, uint8_t *buff,
     // - PSH & FIN bits are zeroed.  These will be set on the next fragment.
     // - window size is set to 0.  Server should only start sending data
     //   after the second fragment was arrived.
-    memcpy(buff, packet, header_size + split);
+    memmove(buff, packet, header_size + split);
     struct iphdr *ip_header_1;
     struct tcphdr *tcp_header_1;
     packet_init(buff, true, NULL, &ip_header_1, NULL, &tcp_header_1, NULL,
@@ -409,8 +409,8 @@ static uint8_t *tcp_fragment(uint8_t *packet, size_t split, uint8_t *buff,
 
     // Create the second fragment.  We only change the TCP sequence number
     // accordingly.
-    memcpy(buff, packet, header_size);
-    memcpy(buff + header_size, data + split, data_size - split);
+    memmove(buff, packet, header_size);
+    memmove(buff + header_size, data + split, data_size - split);
     struct iphdr *ip_header_2;
     struct tcphdr *tcp_header_2;
     packet_init(buff, true, NULL, &ip_header_2, NULL, &tcp_header_2, NULL,

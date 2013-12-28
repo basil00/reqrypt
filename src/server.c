@@ -631,7 +631,7 @@ static void print_urls(const char *command, int color, const char *url,
             for (size_t j = 0; !found && addrs[j] != 0x0; j++)
             {
                 uint32_t addr;
-                memcpy(&addr, host->h_addr_list[i], sizeof(uint32_t));
+                memmove(&addr, host->h_addr_list[i], sizeof(uint32_t));
                 if (addr == htonl(addrs[j]))
                 {
                     found = true;

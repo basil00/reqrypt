@@ -57,9 +57,9 @@ random_state_t random_init(void)
     state->e_idx = sizeof(state->e);
     uint8_t buff[sizeof(state->v) + sizeof(state->k) + sizeof(state->r)];
     random_ext_init(buff, sizeof(buff));
-    memcpy(state->v, buff, sizeof(state->v));
-    memcpy(state->k, buff + sizeof(state->v), sizeof(state->k));
-    memcpy(state->r, buff + sizeof(state->v) + sizeof(state->k),
+    memmove(state->v, buff, sizeof(state->v));
+    memmove(state->k, buff + sizeof(state->v), sizeof(state->k));
+    memmove(state->r, buff + sizeof(state->v) + sizeof(state->k),
         sizeof(state->r));
     return state;
 }

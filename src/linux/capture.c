@@ -285,7 +285,7 @@ static bool netfilter_send_message(uint16_t nl_type, int nfa_type,
     nl_attr->nfa_type = nfa_type;
     nl_attr->nfa_len  = NFA_LENGTH(size);
 
-    memcpy(NFA_DATA(nl_attr), msg, size);
+    memmove(NFA_DATA(nl_attr), msg, size);
 
     struct sockaddr_nl nl_addr;
     memset(&nl_addr, 0x0, sizeof(nl_addr));
@@ -435,7 +435,7 @@ static int netfilter_get_packet(uint8_t *buff, size_t size)
     eth_header->h_proto = htons(ETH_P_IP);
 
     struct iphdr *ip_header = (struct iphdr *)(eth_header + 1);
-    memcpy(ip_header, nl_data, nl_data_size);
+    memmove(ip_header, nl_data, nl_data_size);
 
     return (int)(nl_data_size + sizeof(struct ethhdr));
 }

@@ -233,7 +233,7 @@ static cktp_tunnel_t cktp_clone_tunnel(cktp_tunnel_t tunnel)
             sizeof(struct cktp_tunnel_s));
         exit(EXIT_FAILURE);
     }
-    memcpy(newtunnel, tunnel, sizeof(struct cktp_tunnel_s));
+    memmove(newtunnel, tunnel, sizeof(struct cktp_tunnel_s));
     tunnel = newtunnel;
 
     for (size_t i = 0; i < newtunnel->open_encodings; i++)

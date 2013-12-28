@@ -181,7 +181,7 @@ void config_init(void)
 void config_get(struct config_s *config_copy)
 {
     thread_lock(&config_lock);
-    memcpy(config_copy, &config, sizeof(struct config_s));
+    memmove(config_copy, &config, sizeof(struct config_s));
     thread_unlock(&config_lock);
 }
 
@@ -267,12 +267,12 @@ void config_callback(struct http_user_vars_s *vars)
     {
         // This is a POST request that wishes to save a new configuration:
         struct config_s config_temp;
-        memcpy(&config_temp, &config, sizeof(struct config_s));
+        memmove(&config_temp, &config, sizeof(struct config_s));
         load_config(vars, &config_temp);
 
         // Copy to the global configuration state.
         thread_lock(&config_lock);
-        memcpy(&config, &config_temp, sizeof(struct config_s));
+        memmove(&config, &config_temp, sizeof(struct config_s));
         thread_unlock(&config_lock);
 
         // Save the new configuration to disk.
@@ -427,7 +427,7 @@ static void write_config(struct config_s *config)
 static void read_config(struct config_s *config)
 {
     // Copy the default configuration values:
-    memcpy(config, &config_default, sizeof(struct config_s));
+    memmove(config, &config_default, sizeof(struct config_s));
 
     // Find a configuration file:
     const char *filename = CONFIG_FILENAME;

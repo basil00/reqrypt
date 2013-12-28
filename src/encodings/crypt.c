@@ -620,7 +620,7 @@ static int crypt_init(const cktp_enc_lib_t lib, const char *protocol,
     state->iv_size  = iv_size;
     state->mac_size = mac_size;
     state->pad      = seen_pad;
-    memcpy(state->cert_hash, cert_hash, CRYPT_HASH_SIZE);
+    memmove(state->cert_hash, cert_hash, CRYPT_HASH_SIZE);
     state->rng = lib->random_init();
     state->ekey = (uint8_t *)malloc(cipher->ekeysize);
     if (state->ekey == NULL)
@@ -886,7 +886,7 @@ static bool crypt_find_certificate(state_t state)
             {
                 goto parse_error;
             }
-            memcpy(state->certificate, cert, sizeof(state->certificate));
+            memmove(state->certificate, cert, sizeof(state->certificate));
             
             // Verify the certificate hash:
             hash(state->cipher, state->certificate, sizeof(state->certificate),
@@ -963,7 +963,7 @@ static int crypt_handshake_request(state_t state, uint8_t *data, size_t *size)
 
             state->lib->random(state->rng, req->iv, sizeof(req->iv));
             uint64_t id = CRYPT_ID_REQ_COOKIE;
-            memcpy(req->id, &id, sizeof(req->id));
+            memmove(req->id, &id, sizeof(req->id));
             state->lib->random(state->rng, &state->seq, sizeof(state->seq));
             req->request.seq = state->seq;
             state->lib->random(state->rng, &req->request.unused,
@@ -988,7 +988,7 @@ static int crypt_handshake_request(state_t state, uint8_t *data, size_t *size)
 
             state->lib->random(state->rng, req->iv, sizeof(req->iv));
             uint64_t id = CRYPT_ID_REQ_CERTIFICATE;
-            memcpy(req->id, &id, sizeof(req->id));
+            memmove(req->id, &id, sizeof(req->id));
             state->lib->random(state->rng, &state->seq, sizeof(state->seq));
             req->request.seq = state->seq;
             req->request.cookie = state->id;
@@ -1010,7 +1010,7 @@ static int crypt_handshake_request(state_t state, uint8_t *data, size_t *size)
 
             state->lib->random(state->rng, req->iv, sizeof(req->iv));
             uint64_t id = CRYPT_ID_REQ_KEY;
-            memcpy(req->id, &id, sizeof(req->id));
+            memmove(req->id, &id, sizeof(req->id));
             state->lib->random(state->rng, &state->seq, sizeof(state->seq));
             req->request.seq = state->seq;
             req->request.cookie = state->id;
@@ -1114,7 +1114,7 @@ static int crypt_handshake_reply(state_t state, uint8_t *data, size_t size)
 
             state->have_cert = true;
             state->save_cert = true;
-            memcpy(state->certificate, rep->reply.certificate,
+            memmove(state->certificate, rep->reply.certificate,
                 sizeof(state->certificate));
             state->state = CRYPT_STATE_HANDSHAKE_REQ_KEY;
             return CRYPT_STATE_HANDSHAKE_REQ_KEY;
@@ -1221,7 +1221,7 @@ static int crypt_handshake_reply(state_t state, uint8_t *data, size_t size)
             }
             state->timeout = state->lib->gettime() +
                 signed_data->encrypted.timeout;
-            memcpy(state->key, signed_data->encrypted.key,
+            memmove(state->key, signed_data->encrypted.key,
                 sizeof(signed_data->encrypted.key));
             state->cipher->expandkey(signed_data->encrypted.key,
                 sizeof(signed_data->encrypted.key), state->ekey);
@@ -1308,12 +1308,12 @@ static int crypt_encode(state_t state, uint8_t **dataptr, size_t *sizeptr)
     size += sizeof(struct crypt_client_header_s);
    
     crypt_client_header_t header = (crypt_client_header_t)data;
-    memcpy(header->id, &state->id, sizeof(header->id));
+    memmove(header->id, &state->id, sizeof(header->id));
     header->seq = crypt_seq(state->seq++, state->seq_key);
     state->lib->random(state->rng, header->iv, sizeof(header->iv));
     uint64_t mac = encrypt(state->cipher, header->iv, sizeof(header->iv),
         header->seq, state->ekey, data0, size0);
-    memcpy(header->mac, &mac, sizeof(header->mac));
+    memmove(header->mac, &mac, sizeof(header->mac));
     crypt(state->cipher, header->iv, sizeof(header->iv), state->cert_hash,
         header->id, sizeof(header->id) + sizeof(header->seq));
 
@@ -1360,7 +1360,7 @@ static int crypt_clone(state_t state, state_t *stateptr)
     {
         return CRYPT_ERROR_OUT_OF_MEMORY;
     }
-    memcpy(newstate, state, sizeof(struct crypt_state_s));
+    memmove(newstate, state, sizeof(struct crypt_state_s));
     newstate->ekey = newekey;
     state->gbl_state->refcount++;
 
@@ -1403,7 +1403,7 @@ static int crypt_server_decode(state_t state, uint32_t *source_addr,
         state->cert_hash, client_header->id, sizeof(client_header->id) +
         sizeof(client_header->seq));
     uint64_t id = 0;
-    memcpy(&id, client_header->id, sizeof(client_header->id));
+    memmove(&id, client_header->id, sizeof(client_header->id));
 
     // Packet is a handshake packet:
     switch (id)
@@ -1480,7 +1480,7 @@ static int crypt_server_decode(state_t state, uint32_t *source_addr,
             {
                 return CRYPT_ERROR_BAD_COOKIE;
             }
-            memcpy(rep->reply.certificate, state->certificate,
+            memmove(rep->reply.certificate, state->certificate,
                 sizeof(rep->reply.certificate));
             state->lib->random(state->rng, rep->iv, sizeof(rep->iv));
             crypt(state->cipher, rep->iv, sizeof(rep->iv), state->cert_hash,
@@ -1702,7 +1702,7 @@ static int crypt_server_decode(state_t state, uint32_t *source_addr,
                 return CRYPT_ERROR_BAD_MAC;
             }
             state->id = 0;
-            memcpy(&state->id, client_header->id, sizeof(client_header->id));
+            memmove(&state->id, client_header->id, sizeof(client_header->id));
             *dataptr = payload;
             *sizeptr = payloadsize;
             return 0;
@@ -1734,7 +1734,7 @@ static int crypt_encode(state_t state, uint8_t **dataptr, size_t *sizeptr)
     header->seq = crypt_next_seq(state);
     uint64_t mac = encrypt(state->cipher, header->iv, sizeof(header->iv),
         header->seq, state->ekey, data0, size0);
-    memcpy(header->mac, &mac, sizeof(header->mac));
+    memmove(header->mac, &mac, sizeof(header->mac));
     crypt(state->cipher, header->iv, sizeof(header->iv), state->cert_hash,
         (uint8_t *)&header->seq, sizeof(header->seq));
 
@@ -1919,8 +1919,8 @@ static bool crypt_read_certificate(state_t state)
                 return false;
             }
             fclose(file);
-            memcpy(state->certificate, cert, sizeof(state->certificate));
-            memcpy(state->sign_key, sign_key, sizeof(state->sign_key));
+            memmove(state->certificate, cert, sizeof(state->certificate));
+            memmove(state->sign_key, sign_key, sizeof(state->sign_key));
             return true;
         }
     }
@@ -1949,7 +1949,7 @@ static void crypt_key(state_t state, uint32_t *source_addr, size_t source_size,
     uint32_t id, uint8_t *key)
 {
     uint32_t source_addr_copy[source_size];
-    memcpy(source_addr_copy, source_addr, source_size*sizeof(uint32_t));
+    memmove(source_addr_copy, source_addr, source_size*sizeof(uint32_t));
     source_addr_copy[0] ^= id;
     uint64_t *r0 = (uint64_t *)key;
     uint64_t *r1 = (uint64_t *)(key + sizeof(uint64_t));
@@ -2324,7 +2324,7 @@ static void hash(const struct cipher_s *cipher, uint8_t *data, size_t datasize,
     uint8_t *hashval)
 {
     uint8_t block[CRYPT_BLOCK_SIZE];
-    memcpy(block, p0 + sizeof(uint64_t), CRYPT_HASH_SIZE);
+    memmove(block, p0 + sizeof(uint64_t), CRYPT_HASH_SIZE);
 
     // Hash message:
     uint8_t ekey[cipher->ekeysize] __attribute__((aligned(16)));
@@ -2334,7 +2334,7 @@ static void hash(const struct cipher_s *cipher, uint8_t *data, size_t datasize,
         cipher->expandkey(data,
             (i + CRYPT_HASH_SIZE > datasize? datasize - i: CRYPT_HASH_SIZE),
             ekey);
-        memcpy(block_copy, block, sizeof(block));
+        memmove(block_copy, block, sizeof(block));
         cipher->encrypt(block, ekey, block);
         for (size_t j = 0; j < CRYPT_BLOCK_SIZE; j++)
         {
@@ -2344,7 +2344,7 @@ static void hash(const struct cipher_s *cipher, uint8_t *data, size_t datasize,
 
     // Hash length:
     cipher->expandkey(&datasize, sizeof(datasize), ekey);
-    memcpy(hashval, block, sizeof(block));
+    memmove(hashval, block, sizeof(block));
     cipher->encrypt(block, ekey, block);
     for (size_t i = 0; i < CRYPT_BLOCK_SIZE; i++)
     {

@@ -65,7 +65,7 @@ void N_set(const uint8_t *data, size_t size, N_t a)
     }
     if (extra)
     {
-        memcpy(a + last, data + last * N_RADIX_SIZE, extra);
+        memmove(a + last, data + last * N_RADIX_SIZE, extra);
     }
     for (size_t i = last + 1; i < N_SIZE; i++)
     {
@@ -139,7 +139,7 @@ static void N_mul(N_t a, N_t b, N_t c)
 void N_modexp(N_t b, N_t e, N_t m, N_t r)
 {
     N a[2*N_SIZE];
-    memcpy(a, b, N_SIZE*sizeof(N));
+    memmove(a, b, N_SIZE*sizeof(N));
     memset(a + N_SIZE, 0x0, N_SIZE*sizeof(N));
 
     N t[2*N_SIZE];
@@ -163,7 +163,7 @@ void N_modexp(N_t b, N_t e, N_t m, N_t r)
             w >>= 1;
         }
     }
-    memcpy(r, t, N_SIZE*sizeof(N));
+    memmove(r, t, N_SIZE*sizeof(N));
 }
 
 /*
@@ -172,11 +172,11 @@ void N_modexp(N_t b, N_t e, N_t m, N_t r)
 static void N_mod(N_t a, N_t b, N_t c)
 {
     N n[2*N_SIZE];
-    memcpy(n, a, 2*N_SIZE*sizeof(N));
+    memmove(n, a, 2*N_SIZE*sizeof(N));
 
     N d[2*N_SIZE];
     memset(d, 0x0, N_SIZE*sizeof(N));
-    memcpy(d + N_SIZE, b, N_SIZE*sizeof(N));
+    memmove(d + N_SIZE, b, N_SIZE*sizeof(N));
 
     unsigned n_bits = N_bits(n, 2*N_SIZE*N_RADIX_SHIFT);
     unsigned d_bits = N_bits(d, 2*N_SIZE*N_RADIX_SHIFT);
@@ -200,7 +200,7 @@ static void N_mod(N_t a, N_t b, N_t c)
         N_sub(n, n_bits, d);
         n_bits = N_bits(n, n_bits);
     }
-    memcpy(c, n, N_SIZE*sizeof(N));
+    memmove(c, n, N_SIZE*sizeof(N));
 }
 
 /*

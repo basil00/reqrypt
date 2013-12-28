@@ -89,7 +89,7 @@ static http_buffer_t http_lookup_static_data(const char *name)
         return NULL;
     }
     http_buffer_t buff = http_buffer_open();
-    memcpy(buff, &data->buff, sizeof(struct http_buffer_s));
+    memmove(buff, &data->buff, sizeof(struct http_buffer_s));
     return buff;
 }
 
@@ -992,7 +992,7 @@ bool http_send_response(socket_t s, unsigned http_code, bool cache,
     }
     snprintf(http_response, http_response_length, http_header_format,
         http_response_header, http_body_length, http_content_type);
-    memcpy(http_response + http_header_length, buff->buff, http_body_length);
+    memmove(http_response + http_header_length, buff->buff, http_body_length);
     if (buff != content)
     {
         http_buffer_close(buff);

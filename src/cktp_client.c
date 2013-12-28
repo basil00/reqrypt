@@ -137,7 +137,7 @@ extern cktp_tunnel_t cktp_open_tunnel(const char *url)
         goto open_tunnel_error;
     }
     tunnel->addrtype = server->h_addrtype;
-    memcpy(tunnel->server_addr, server->h_addr_list[0], server->h_length);
+    memmove(tunnel->server_addr, server->h_addr_list[0], server->h_length);
 
     // Open a socket and bind it to the server's address.
     switch (tunnel->transport)
@@ -278,7 +278,7 @@ extern cktp_tunnel_t cktp_open_tunnel(const char *url)
         memset(&sockaddr, 0x0, sizeof(sockaddr));
         sockaddr.sin6_family = AF_INET6;
         sockaddr.sin6_port   = tunnel->server_port;
-        memcpy(&sockaddr.sin6_addr, tunnel->server_addr,
+        memmove(&sockaddr.sin6_addr, tunnel->server_addr,
             sizeof(struct in6_addr));
         if (connect(tunnel->socket, (struct sockaddr *)&sockaddr,
                 sizeof(struct in6_addr)) != 0)
@@ -593,7 +593,7 @@ static bool cktp_send_request(cktp_tunnel_t tunnel, uint8_t *buff, size_t size,
             uint8_t *enc_buff_ptr = CKTP_ENCODING_BUFF_INIT(enc_buff,
                 tunnel->overhead);
             size_t enc_size = size;
-            memcpy(enc_buff_ptr, buff, enc_size);
+            memmove(enc_buff_ptr, buff, enc_size);
             if (!cktp_encode_packet(tunnel, &enc_buff_ptr, &enc_size))
             {
                 return false;
@@ -871,7 +871,7 @@ packet_too_big_error:
     uint8_t buff0[CKTP_ENCODING_BUFF_SIZE(packet_size, tunnel->overhead)];
     uint8_t *buff = CKTP_ENCODING_BUFF_INIT(buff0, tunnel->overhead);
     size_t buff_size = packet_size;
-    memcpy(buff, packet, packet_size);
+    memmove(buff, packet, packet_size);
     struct iphdr *ip_header2 = (struct iphdr *)buff;
 
     // Adjust the source IP address if the client's IP address doesn't
@@ -1077,7 +1077,7 @@ void cktp_fragmentation_required(cktp_tunnel_t tunnel, uint16_t mtu,
             icmp_header->un.frag.unused = 0x0;
             icmp_header->un.frag.mtu    = htons(mtu);
             uint8_t *icmp_body = (uint8_t *)(icmp_header + 1);
-            memcpy(icmp_body, ip_header, icmp_body_len);
+            memmove(icmp_body, ip_header, icmp_body_len);
             struct iphdr *icmp_ip_header = (struct iphdr *)icmp_body;
             if (icmp_ip_header->saddr != tunnel->client_addr[0])
             {
