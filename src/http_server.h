@@ -74,7 +74,8 @@ void http_register_callback(const char *name, http_callback_func_t func);
 /*
  * Launch a http server that listens on the given port.
  */
-void http_server(uint16_t port, void (*callback)(struct http_user_vars_s *));
+void http_server(uint16_t port, void (*callback)(struct http_user_vars_s *),
+    bool launch);
 
 /*
  * Helper functions for user vars.

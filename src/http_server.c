@@ -33,7 +33,6 @@
 #include "http_server.h"
 #include "log.h"
 #include "misc.h"
-#include "options.h"
 #include "socket.h"
 
 #define MAX_REQUEST_BUFF_SIZE   2048
@@ -215,7 +214,8 @@ static void http_expand_macro(const char *macro_name, const char *arg,
 /*
  * Launch a http server that listens on the given port.
  */
-void http_server(uint16_t port, void (*callback)(struct http_user_vars_s *))
+void http_server(uint16_t port, void (*callback)(struct http_user_vars_s *),
+    bool launch)
 {
     socket_t s_listen = socket(AF_INET6, SOCK_STREAM, IPPROTO_TCP);
     if (s_listen == INVALID_SOCKET)
@@ -250,7 +250,7 @@ void http_server(uint16_t port, void (*callback)(struct http_user_vars_s *))
     }
 
     // Launch the UI:
-    if (!options_get()->seen_no_launch_ui)
+    if (launch)
     {
         launch_ui(port);
     }

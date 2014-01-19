@@ -58,6 +58,7 @@
 #define VAR_UDP_PORT            "UDP_PORT"
 #define VAR_UDP_PROTO           "UDP_PROTO"
 #define VAR_MTU                 "MTU"
+#define VAR_LAUNCH_UI           "LAUNCH_UI"
 #define VAR_ADD_URL             "ADD_URL"
 #define VAR_DEL_URL             "DEL_URL"
 
@@ -105,7 +106,8 @@ const struct config_s config_default =
     PROTOCOL_TCP_DEFAULT,
     53,
     PROTOCOL_UDP_DEFAULT,
-    1492
+    1492,
+    true
 };
 
 /*
@@ -262,6 +264,9 @@ void config_callback(struct http_user_vars_s *vars)
             protocol_get_name(config.udp_proto));
         snprintf(buff, sizeof(buff)-1, "%u", config.mtu);
         http_user_var_insert(vars, VAR_MTU, buff);
+        http_user_var_insert(vars, VAR_LAUNCH_UI,
+            bool_to_string(config.launch_ui));
+
     }
     else if (http_get_bool_var(vars, VAR_SAVE, &should_save) && should_save)
     {
@@ -343,6 +348,7 @@ static void load_config(struct http_user_vars_s *vars, struct config_s *config)
     }
     http_get_int_var(vars, VAR_MTU, 0, UINT16_MAX, sizeof(config->mtu),
         (uint8_t *)&config->mtu);
+    http_get_bool_var(vars, VAR_LAUNCH_UI, &config->launch_ui);
 }
 
 /*
@@ -409,6 +415,8 @@ static void write_config(struct config_s *config)
     fprintf(file, "%s = \"%s\"\n", VAR_UDP_PROTO,
         protocol_get_name(config->udp_proto));
     fprintf(file, "%s = \"%u\"\n", VAR_MTU, config->mtu);
+    fprintf(file, "%s = \"%s\"\n", VAR_LAUNCH_UI,
+        bool_to_string(config->launch_ui));
     fclose(file);
 
 #ifdef WINDOWS

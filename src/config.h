@@ -112,6 +112,7 @@ struct config_s
     uint16_t       udp_port;        // UDP port.
     proto_t        udp_proto;       // UDP protocol handler.
     uint16_t       mtu;             // MTU for tunnelled packets.
+    bool           launch_ui;       // Auto-launch the UI on startup.
 };
 
 /*

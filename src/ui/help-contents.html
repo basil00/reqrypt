@@ -32,6 +32,7 @@
    <ul>
     <li><a href="#what_enabled">What is "$PROGRAM enabled"?</a>
     <li><a href="#what_hide">What is "HTTP hiding mode"?</a>
+    <li><a href="#what_autolaunch">What is "Auto-Launch WebUI"?</a>
     <li><a href="#what_dns">What is "DNS Hiding"?</a>
     <li><a href="#what_nat">What is "Use NAT Traversal"?</a>
     <li><a href="#what_nat_meth">What is "NAT traversal method"?</a>
@@ -170,7 +171,7 @@
  <div class="answer">
   <p>
    The TEST tab displays the <i>client home page</i> from the $PROGRAM website.
-   If ReQrypt is working the page should display correctly.
+   If $PROGRAM is working the page should display correctly.
    Otherwise an error message or timeout should occur.
    The test page is periodically updated with the latest news, releases, and
    tunnel lists.
@@ -239,7 +240,7 @@
  </div>
  <div class="answer">
   <p>
-   This decides which upstreams packets are tunneled.
+   This decides which upstream packets are tunneled.
    The options are:
    <ol>
     <li> <b>Hide all HTTP traffic</b>: Tunnels all upstream TCP port 80 (HTTP)
@@ -267,6 +268,21 @@
    only effective against inspection/logging systems, and some kinds of
    non-proxying censorship systems.
    It is recommended you use the least conservative mode that works.
+  </p>
+ </div>
+
+ <div class="question">
+  <a name="what_autolaunch">What is "Auto-Launch WebUI"?</a>
+ </div>
+ <div class="answer">
+  <p>
+   This controls whether or not the $PROGRAM webUI is automatically launched
+   on startup.
+   The options are:
+   <ul>
+    <li> <b>Enabled</b>: $PROGRAM webUI is automatically launched
+    <li> <b>Disabled</b>: $PROGRAM webUI is not automatically launched
+   </ul>
   </p>
  </div>
 

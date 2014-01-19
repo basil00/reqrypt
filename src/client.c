@@ -131,7 +131,7 @@ int MAIN(int argc, char **argv)
     for (int i = 1; i < num_threads; i++)
     {
         thread_t work_thread;
-        if (thread_create(&work_thread, worker_thread, (void *)i) != 0)
+        if (thread_create(&work_thread, worker_thread, NULL) != 0)
         {
             error("unable to create worker thread");
         }
@@ -203,6 +203,8 @@ static void *worker_thread(void *arg)
             inject_packet((uint8_t *)allowed_packets[i], tot_len);
         }
     }
+
+    return NULL;
 }
 
 /*
@@ -217,12 +219,16 @@ static void *configuration_thread(void *arg)
         error("unable to start user interface server; expected a port number "
             "0..%u, found %d", UINT16_MAX, port);
     }
+    struct config_s config;
+    config_get(&config);
+    bool launch =
+        !options_get()->seen_no_launch_ui && config.launch_ui;
 
     // Register an exit handler.
     http_register_callback("exit", user_exit);
 
     log("starting %s user interface http://localhost:%u/", PROGRAM_NAME, port);
-    http_server(port, config_callback);
+    http_server(port, config_callback, launch);
     return NULL;
 }
 
