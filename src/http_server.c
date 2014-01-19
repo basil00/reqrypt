@@ -76,7 +76,7 @@ static http_buffer_t http_lookup_static_data(const char *name)
     struct file_data_s key;
     if (name[0] == '\0')
     {
-        name = "home.html";
+        name = "options.html";
     }
     key.name = name;
 
@@ -204,7 +204,7 @@ static void http_handle_request(socket_t s,
     const struct http_request_s *request);
 static void http_error(socket_t s, unsigned http_code,
     const struct http_request_s *request);
-static bool http_send_response(socket_t s, unsigned http_code, bool cache,
+static bool http_send_response(socket_t s, unsigned http_code,
     http_buffer_t content, const struct http_request_s *request);
 static int http_type(const char *name);
 static void http_expand_content(http_buffer_t content,
@@ -317,7 +317,7 @@ void http_server(uint16_t port, void (*callback)(struct http_user_vars_s *))
                 http_buffer_t content = http_buffer_open();
                 if (generate(content))
                 {
-                    bool success = http_send_response(s, 200, false, content,
+                    bool success = http_send_response(s, 200, content,
                         &parser.request);
                     if (!success)
                     {
@@ -854,7 +854,7 @@ void http_handle_request(socket_t s, const struct http_request_s *request)
         http_error(s, 404, request);
         return;
     }
-    bool success = http_send_response(s, 200, false, content, request);
+    bool success = http_send_response(s, 200, content, request);
     http_buffer_close(content);
     if (!success)
     {
@@ -886,7 +886,7 @@ void http_error(socket_t s, unsigned http_code,
         http_buffer_t content = http_lookup_content(content_filename);
         if (content != NULL)
         {
-            if (http_send_response(s, http_code, false, content, request))
+            if (http_send_response(s, http_code, content, request))
             {
                 http_buffer_close(content);
                 return;
@@ -911,7 +911,7 @@ void http_error(socket_t s, unsigned http_code,
 /*
  * Send a HTTP response.
  */
-bool http_send_response(socket_t s, unsigned http_code, bool cache,
+bool http_send_response(socket_t s, unsigned http_code,
     http_buffer_t content, const struct http_request_s *request)
 {
     const char *http_response_header;
@@ -939,11 +939,9 @@ bool http_send_response(socket_t s, unsigned http_code, bool cache,
             break;
         case HTTP_TYPE_CSS:
             http_content_type = "text/css";
-            cache = true;
             break;
         case HTTP_TYPE_JAVASCRIPT:
             http_content_type = "text/javascript";
-            cache = true;
             break;
         case HTTP_TYPE_TEXT:
             http_content_type = "text/plain";
@@ -962,27 +960,17 @@ bool http_send_response(socket_t s, unsigned http_code, bool cache,
     {
         buff = content;
     }
-    const char *http_cache_control;
-    if (cache)
-    {
-        http_cache_control = "Cache-Control: max-age=86400\r\n";
-    }
-    else
-    {
-        http_cache_control = "";
-    }
     const char *http_header_format =
         "%s\r\n"
         "Content-Length: %d\r\n"
         "Connection: close\r\n"
         "Content-Type: %s\r\n"
-        "%s"
+        "Cache-Control: no-cache, must-revalidate\r\n"
         "Server: " PROGRAM_NAME_LONG "\r\n"
         "\r\n";
     size_t http_body_length = buff->put_pos;
     size_t http_header_length = snprintf(NULL, 0, http_header_format,
-        http_response_header, http_body_length, http_content_type,
-        http_cache_control);
+        http_response_header, http_body_length, http_content_type);
     size_t http_response_length = http_header_length + http_body_length;
     char *http_response = (char *)malloc(http_response_length);
     if (http_response == NULL)

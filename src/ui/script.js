@@ -24,10 +24,10 @@ function doLoad()
 
 function activateTab()
 {
-    if (document.home)
+    if (document.test)
     {
-        var home_tab = document.getElementById("home_tab");
-        home_tab.className += " active";
+        var test_tab = document.getElementById("test_tab");
+        test_tab.className += " active";
         return;
     }
 
@@ -288,6 +288,24 @@ function copyFromSelect(select)
         }
     }
     return "";
+}
+
+function loadTestPage()
+{
+    var test_frame = document.getElementById("test_frame");
+    if (test_frame)
+    {
+        test_frame.src = "http://home.reqrypt.org/";
+    }
+}
+
+function resetTestPage()
+{
+    var test_frame = document.getElementById("test_frame");
+    if (test_frame)
+    {
+        test_frame.src = "test-instructions.html"
+    }
 }
 
 function exit()

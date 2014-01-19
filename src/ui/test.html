@@ -1,0 +1,30 @@
+<!doctype html>
+<html>
+<head>
+ $INCLUDE(head.html)
+</head>
+<body class="style" onLoad="doLoad()">
+<div class="wrap">
+  $INCLUDE(title.html)
+  $INCLUDE(tabs.html)
+ <div class="main" id="test">
+  $INCLUDE(exit.html)
+  <small>
+   TEST:
+  </small>
+  <iframe id="test_frame" src="test-instructions.html" width="100%"
+          height="400" class="log">
+   (browser does not support iframes; cannot display test pagee)
+  </iframe>
+  <div>
+   <input title="Load the ReQrypt test page http://home.reqrypt.org"
+          type="button" value="Load Test Page" onMouseUp="loadTestPage()">
+   <input title="Reset the ReQrypt test page"
+          type="button" value="Reset" onMouseUp="resetTestPage()">
+  </div>
+ </div>
+ <form name="test">
+ </form>
+</div>
+</body>
+</html>
