@@ -71,7 +71,9 @@ client_install_macosx: client
 client_install_windows: client_windows
 	(cd src; \
 	 mv $(PACKAGE_NAME)-install.exe \
-		../$(CLIENT_PROG)-$(PACKAGE_VERSION_SHORT)-win$(BITS)-install.exe)
+		../$(CLIENT_PROG)-$(PACKAGE_VERSION_SHORT)-win$(BITS)-install.exe; \
+     mv $(PACKAGE_NAME)-files.zip \
+        ../$(CLIENT_PROG)-$(PACKAGE_VERSION_SHORT)-win$(BITS)-files.zip)
 
 server_install: server ctool
 	(cd src/tools; \

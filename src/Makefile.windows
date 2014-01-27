@@ -87,7 +87,12 @@ install: client
         "$(ROOT)/src/$(PLATFORM)/install/$(CLIENT_PROG).exe.manifest"
 	(cd $(ROOT)/src/$(PLATFORM)/install/; \
 	 "$(NSIS_PATH)" install.nsi)
+	(cd $(ROOT)/src/$(PLATFORM)/install/; \
+        zip -r $(PACKAGE_NAME)-files.zip WinDivert32.sys WinDivert64.sys \
+            WinDivert.dll $(CLIENT_PROG).exe $(CLIENT_PROG).exe.manifest)
 	cp "$(ROOT)/src/$(PLATFORM)/install/$(PACKAGE_NAME)-install.exe" \
+        "$(ROOT)/src/"
+	cp "$(ROOT)/src/$(PLATFORM)/install/$(PACKAGE_NAME)-files.zip" \
         "$(ROOT)/src/"
 
 clean:
