@@ -1,5 +1,5 @@
 ; install.nsi.in
-; (C) 2011, all rights reserved,
+; (C) 2014, all rights reserved,
 ; 
 ; This program is free software: you can redistribute it and/or modify
 ; it under the terms of the GNU General Public License as published by
@@ -41,7 +41,14 @@ Section ""
     File "WinDivert64.sys"
     File "WinDivert.dll"
     WriteUninstaller "@PACKAGE_NAME@-uninstall.exe"
-    CreateShortCut "$DESKTOP\@PACKAGE_NAME@.lnk" "$INSTDIR\@PACKAGE_NAME@.exe" ""
+    WriteRegStr HKLM \
+    "Software\Microsoft\Windows\CurrentVersion\Uninstall\@PACKAGE_NAME_LONG@" \
+        "DisplayName" "@PACKAGE_NAME_LONG@"
+    WriteRegStr HKLM \
+    "Software\Microsoft\Windows\CurrentVersion\Uninstall\@PACKAGE_NAME_LONG@" \
+        "UninstallString" "$\"$INSTDIR\@PACKAGE_NAME@-uninstall.exe$\""
+    CreateShortCut "$DESKTOP\@PACKAGE_NAME@.lnk" \
+        "$INSTDIR\@PACKAGE_NAME@.exe" ""
 SectionEnd
 
 Section "Uninstall"
@@ -61,6 +68,8 @@ Section "Uninstall"
     Delete "$INSTDIR\WinDivert64.sys"
     Delete "$INSTDIR\WinDivert.dll"
     RMDir "$INSTDIR\"
+    DeleteRegKey HKLM \
+    "Software\Microsoft\Windows\CurrentVersion\Uninstall\@PACKAGE_NAME_LONG@"
     Delete "$DESKTOP\@PACKAGE_NAME@.lnk"
 SectionEnd
 

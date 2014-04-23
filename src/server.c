@@ -1,6 +1,6 @@
 /*
  * server.c
- * (C) 2011, all rights reserved,
+ * (C) 2014, all rights reserved,
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -87,7 +87,7 @@ static bool become_daemon(void);
 int main(int argc, char **argv)
 {
     // Print a GPL intro:
-    printf("%s %s Copyright (C) 2011 basil\n", PROGRAM_NAME, PROGRAM_VERSION);
+    printf("%s %s Copyright (C) 2014 basil\n", PROGRAM_NAME, PROGRAM_VERSION);
     puts("License GPLv3+: GNU GPL version 3 or later "
         "<http://gnu.org/licenses/gpl.html>.");
     puts("This is free software: you are free to change and redistribute it.");

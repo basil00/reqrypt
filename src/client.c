@@ -1,6 +1,6 @@
 /*
  * client.c
- * (C) 2010, all rights reserved,
+ * (C) 2014, all rights reserved,
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -60,7 +60,7 @@ struct config_s config;
 int MAIN(int argc, char **argv)
 {
     // First print GPL information:
-    printf("%s %s [%s] Copyright (C) 2011 basil\n", PROGRAM_NAME_LONG,
+    printf("%s %s [%s] Copyright (C) 2014 basil\n", PROGRAM_NAME_LONG,
         PROGRAM_VERSION, PLATFORM);
     puts("License GPLv3+: GNU GPL version 3 or later "
         "<http://gnu.org/licenses/gpl.html>.");
