@@ -2,8 +2,11 @@
 # AUTOMATICALLY GENERATED, DO NOT EDIT
 
 # AGE = 16
-udp://tunnel.reqrypt.org:30201?crypt=cipher.xxtea,cert.Tq5BWwTN6ddJhnXKBbFC7z,sec.2888 16
+udp://191.101.180.77:31111?crypt=cipher.aes,cert.JnWvfd1nOJEA55p6uJNuRF,sec.2888 16
 
 # AGE = 16
-udp://tunnel.reqrypt.org:55577?crypt=cipher.aes,cert.uX5h0LEL3Aj-ZwCHFTLEYx,sec.2888 16
+udp://191.101.180.77:29989?crypt=cipher.xxtea,cert.a5p7i0RZlcs8y58ersfl75,sec.2888 16
+
+# ARG = 16
+# ping://191.101.180.77:40404?crypt=cipher.aes,cert.3=j3L53U9Jy0jhMsyaUmDe,sec.2888 16
 
