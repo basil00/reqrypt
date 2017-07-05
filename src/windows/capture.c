@@ -52,7 +52,8 @@ void init_capture(void)
 {
     handle = WinDivertOpen(
         "ip and "
-        "(outbound and (tcp.DstPort == 80 or udp.DstPort == 53) or"
+        "(outbound and (tcp.DstPort == 443 or tcp.DstPort == 80 or"
+        " udp.DstPort == 53) or"
         " inbound and icmp.Type == 11 and icmp.Code == 0) and "
         "ip.DstAddr != 127.0.0.1",
         WINDIVERT_LAYER_NETWORK, -501, 0);

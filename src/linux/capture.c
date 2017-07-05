@@ -78,7 +78,10 @@
  */
 #define IPTABLES_BUFFSIZE   256
 #define IPTABLES_ARGS_MAX   32
-static const char *ip_tables_enable_tcp_queue =
+static const char *ip_tables_enable_tcp_1_queue =
+    "/sbin/iptables -I OUTPUT -p tcp -m tcp -m owner --uid-owner %d "
+    "-m mark ! --mark %d -j NFQUEUE --dport 443 --queue-num %d";
+static const char *ip_tables_enable_tcp_2_queue =
     "/sbin/iptables -I OUTPUT -p tcp -m tcp -m owner --uid-owner %d "
     "-m mark ! --mark %d -j NFQUEUE --dport 80 --queue-num %d";
 static const char *ip_tables_enable_udp_queue =
@@ -87,7 +90,10 @@ static const char *ip_tables_enable_udp_queue =
 static const char *ip_tables_enable_filter_icmp =
     "/sbin/iptables -I INPUT -p icmp --icmp-type ttl-zero-during-transit "
     "-j DROP";
-static const char *ip_tables_disable_tcp_queue =
+static const char *ip_tables_disable_tcp_1_queue =
+    "/sbin/iptables -D OUTPUT -p tcp -m tcp -m owner --uid-owner %d "
+    "-m mark ! --mark %d -j NFQUEUE --dport 443 --queue-num %d";
+static const char *ip_tables_disable_tcp_2_queue =
     "/sbin/iptables -D OUTPUT -p tcp -m tcp -m owner --uid-owner %d "
     "-m mark ! --mark %d -j NFQUEUE --dport 80 --queue-num %d";
 static const char *ip_tables_disable_udp_queue =
@@ -195,10 +201,12 @@ void init_capture(void)
     signal(SIGPIPE, iptables_undo_on_signal);
     signal(SIGALRM, iptables_undo_on_signal);
 #endif      /* DEBUG */
-    iptables_undo_insert(ip_tables_disable_tcp_queue);
+    iptables_undo_insert(ip_tables_disable_tcp_1_queue);
+    iptables_undo_insert(ip_tables_disable_tcp_2_queue);
     iptables_undo_insert(ip_tables_disable_udp_queue);
     iptables_undo_insert(ip_tables_disable_filter_icmp);
-    iptables(ip_tables_enable_tcp_queue);
+    iptables(ip_tables_enable_tcp_1_queue);
+    iptables(ip_tables_enable_tcp_2_queue);
     iptables(ip_tables_enable_udp_queue);
     iptables(ip_tables_enable_filter_icmp);
     iptables_clean = false;

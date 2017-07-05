@@ -51,13 +51,17 @@
 #define IPFW_BUFFSIZE   256
 #define IPFW_ARGS_MAX   32
 #ifndef MACOSX
-static const char *ipfw_divert_tcp =
+static const char *ipfw_divert_tcp_1 =
+    "/sbin/ipfw 40404 add divert %d out proto tcp dst-port 443 uid %d";
+static const char *ipfw_divert_tcp_2 =
     "/sbin/ipfw 40405 add divert %d out proto tcp dst-port 80 uid %d";
 static const char *ipfw_divert_udp =
     "/sbin/ipfw 40406 add divert %d out proto udp dst-port 53 uid %d";
 #else
 // MACOSX uid is buggy
-static const char *ipfw_divert_tcp =
+static const char *ipfw_divert_tcp_1 =
+    "/sbin/ipfw 40404 add divert %d out proto tcp dst-port 80";
+static const char *ipfw_divert_tcp_2 =
     "/sbin/ipfw 40405 add divert %d out proto tcp dst-port 80";
 static const char *ipfw_divert_udp =
     "/sbin/ipfw 40406 add divert %d out proto udp dst-port 53";
@@ -65,7 +69,7 @@ static const char *ipfw_divert_udp =
 static const char *ipfw_filter_icmp =
     "/sbin/ipfw 40407 add deny in icmptypes 11";
 static const char *ipfw_undo =
-    "/sbin/ipfw delete 40405 40406 40407";
+    "/sbin/ipfw delete 40404 40405 40406 40407";
 
 /*
  * Prototypes.
@@ -121,7 +125,8 @@ void init_capture(void)
     signal(SIGPIPE, ipfw_undo_on_signal);
     signal(SIGALRM, ipfw_undo_on_signal);
 #endif      /* DEBUG */
-    ipfw(ipfw_divert_tcp);
+    ipfw(ipfw_divert_tcp_1);
+    ipfw(ipfw_divert_tcp_2);
     ipfw(ipfw_divert_udp);
     ipfw(ipfw_filter_icmp);
     ipfw_clean = false;

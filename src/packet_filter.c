@@ -171,7 +171,8 @@ bool packet_filter(struct config_s *config, const uint8_t *packet,
     bool should_tunnel = false;
     if (tcp_header != NULL)
     {
-        if (tcp_header->dest != htons(80))
+        if (tcp_header->dest != htons(80) &&
+            tcp_header->dest != htons(443))
         {
             return false;
         }

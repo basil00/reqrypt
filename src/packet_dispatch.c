@@ -67,7 +67,7 @@ void packet_dispatch(struct config_s *config, random_state_t rng,
     packet_init(packet, true, &eth_header, &ip_header, &ip6_header,
         &tcp_header, &udp_header, &data, &header_size, &data_size);
 
-    const struct proto_s *protocol;
+    const struct proto_s *protocol = NULL;
     bool is_tcp;
     if (tcp_header != NULL)
     {
@@ -104,7 +104,8 @@ void packet_dispatch(struct config_s *config, random_state_t rng,
         }
     
         // Get the protocol handlers:
-        protocol = protocol_get_def(config->tcp_proto);
+        if (ntohs(tcp_header->dest) == 80)
+            protocol = protocol_get_def(config->tcp_proto);
     }
     else
     {
@@ -114,7 +115,7 @@ void packet_dispatch(struct config_s *config, random_state_t rng,
 
     // If we are required to split up the packet then do so here.
     unsigned allow_i = 0, tunnel_i = 0;
-    if (is_tcp && config->split != SPLIT_NONE)
+    if (is_tcp && protocol != NULL && config->split != SPLIT_NONE)
     {
         size_t split_start = 0, split_end = 0;
         if (protocol->match((uint8_t *)ip_header, &split_start, &split_end))
@@ -203,8 +204,22 @@ void packet_dispatch(struct config_s *config, random_state_t rng,
             memmove(packet_copy + sizeof(struct ethhdr), tunneled_packets[i],
                 tunneled_header_size);
 
-            protocol->generate(packet_copy + sizeof(struct ethhdr),
-                packet_hash);
+            if (protocol != NULL)
+            {
+                protocol->generate(packet_copy + sizeof(struct ethhdr),
+                    packet_hash);
+            }
+            else
+            {
+                // Fallback to random data:
+                uint8_t *data;
+                size_t data_len;
+                packet_init(packet, false, NULL, NULL, NULL, NULL, NULL,
+                    &data, NULL, &data_len);
+                rand_state_t rng = rand_init(packet_hash);
+                rand_memory(rng, data, data_len);
+                rand_free(rng);
+            }
 
             struct iphdr *copy_ip_header;
             struct tcphdr *copy_tcp_header;
