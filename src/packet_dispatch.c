@@ -104,7 +104,7 @@ void packet_dispatch(struct config_s *config, random_state_t rng,
         }
     
         // Get the protocol handlers:
-        if (ntohs(tcp_header->dest) == 80)
+        if (tcp_header->dest != htons(80))
             protocol = protocol_get_def(config->tcp_proto);
     }
     else
@@ -214,7 +214,7 @@ void packet_dispatch(struct config_s *config, random_state_t rng,
                 // Fallback to random data:
                 uint8_t *data;
                 size_t data_len;
-                packet_init(packet, false, NULL, NULL, NULL, NULL, NULL,
+                packet_init(packet_copy, false, NULL, NULL, NULL, NULL, NULL,
                     &data, NULL, &data_len);
                 rand_state_t rng = rand_init(packet_hash);
                 rand_memory(rng, data, data_len);
