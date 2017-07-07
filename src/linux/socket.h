@@ -47,6 +47,4 @@ typedef int socket_t;
 #define UDP_NO_CHECK_LAYER          SOL_SOCKET
 #define UDP_NO_CHECK_OPTION         SO_NO_CHECK
 
-#define unused                      __unused
-
 #endif      /* __SOCKET_H */

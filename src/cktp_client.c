@@ -1072,9 +1072,9 @@ void cktp_fragmentation_required(cktp_tunnel_t tunnel, uint16_t mtu,
             reflect->ip_version = 4;
             reflect->protocol   = IPPROTO_ICMP;
             struct icmphdr *icmp_header = (struct icmphdr *)(reflect + 1);
+            memset(icmp_header, 0, sizeof(struct icmphdr));
             icmp_header->type           = ICMP_DEST_UNREACH;
             icmp_header->code           = ICMP_FRAG_NEEDED;
-            icmp_header->un.frag.unused = 0x0;
             icmp_header->un.frag.mtu    = htons(mtu);
             uint8_t *icmp_body = (uint8_t *)(icmp_header + 1);
             memmove(icmp_body, ip_header, icmp_body_len);
