@@ -691,7 +691,8 @@ static bool cktp_is_valid_packet(struct iphdr *payload, size_t payload_size,
                 return false;
             }
             struct tcphdr *tcp_header = (struct tcphdr *)next_header;
-            if (tcp_header->dest != htons(80))
+            if (tcp_header->dest != htons(80) &&
+                tcp_header->dest != htons(443))
             {
                 return false;
             }
