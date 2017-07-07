@@ -201,11 +201,15 @@ void init_capture(void)
     signal(SIGPIPE, iptables_undo_on_signal);
     signal(SIGALRM, iptables_undo_on_signal);
 #endif      /* DEBUG */
+#ifdef HTTPS
     iptables_undo_insert(ip_tables_disable_tcp_1_queue);
+#endif
     iptables_undo_insert(ip_tables_disable_tcp_2_queue);
     iptables_undo_insert(ip_tables_disable_udp_queue);
     iptables_undo_insert(ip_tables_disable_filter_icmp);
+#ifdef HTTPS
     iptables(ip_tables_enable_tcp_1_queue);
+#endif
     iptables(ip_tables_enable_tcp_2_queue);
     iptables(ip_tables_enable_udp_queue);
     iptables(ip_tables_enable_filter_icmp);

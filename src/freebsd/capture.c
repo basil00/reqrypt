@@ -60,7 +60,7 @@ static const char *ipfw_divert_udp =
 #else
 // MACOSX uid is buggy
 static const char *ipfw_divert_tcp_1 =
-    "/sbin/ipfw 40404 add divert %d out proto tcp dst-port 80";
+    "/sbin/ipfw 40404 add divert %d out proto tcp dst-port 443";
 static const char *ipfw_divert_tcp_2 =
     "/sbin/ipfw 40405 add divert %d out proto tcp dst-port 80";
 static const char *ipfw_divert_udp =
@@ -125,7 +125,9 @@ void init_capture(void)
     signal(SIGPIPE, ipfw_undo_on_signal);
     signal(SIGALRM, ipfw_undo_on_signal);
 #endif      /* DEBUG */
+#ifdef HTTPS
     ipfw(ipfw_divert_tcp_1);
+#endif
     ipfw(ipfw_divert_tcp_2);
     ipfw(ipfw_divert_udp);
     ipfw(ipfw_filter_icmp);
