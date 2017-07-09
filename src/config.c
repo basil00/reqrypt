@@ -46,6 +46,7 @@
 #define VAR_HIDE_TCP_FIN        "HIDE_TCP_FIN"
 #define VAR_HIDE_TCP_RST        "HIDE_TCP_RST"
 #define VAR_HIDE_UDP            "HIDE_UDP"
+#define VAR_TUNNEL              "TUNNEL"
 #define VAR_SPLIT_MODE          "SPLIT_MODE"
 #define VAR_LOG_LEVEL           "LOG_LEVEL"
 #define VAR_GHOST_MODE          "GHOST_MODE"
@@ -96,6 +97,7 @@ const struct config_s config_default =
     FLAG_SET,
     FLAG_SET,
     false,
+    true,
     SPLIT_NONE,
     GHOST_NAT,
     true,
@@ -237,6 +239,8 @@ void config_callback(struct http_user_vars_s *vars)
             enum_to_string(config.hide_tcp_fin, flag_def, DEF_SIZE(flag_def)));
         http_user_var_insert(vars, VAR_HIDE_TCP_RST,
             enum_to_string(config.hide_tcp_rst, flag_def, DEF_SIZE(flag_def)));
+        http_user_var_insert(vars, VAR_TUNNEL,
+            bool_to_string(config.tunnel));
         http_user_var_insert(vars, VAR_SPLIT_MODE,
             enum_to_string(config.split, split_def, DEF_SIZE(split_def)));
         http_user_var_insert(vars, VAR_LOG_LEVEL,
@@ -315,6 +319,7 @@ static void load_config(struct http_user_vars_s *vars, struct config_s *config)
         &config->hide_tcp_fin);
     http_get_enum_var(vars, VAR_HIDE_TCP_RST, flag_def, DEF_SIZE(flag_def),
         &config->hide_tcp_rst);
+    http_get_bool_var(vars, VAR_TUNNEL, &config->tunnel);
     http_get_enum_var(vars, VAR_SPLIT_MODE, split_def, DEF_SIZE(split_def),
         &config->split);
     config_enum_t log_level;
@@ -394,6 +399,8 @@ static void write_config(struct config_s *config)
         enum_to_string(config->hide_tcp_rst, flag_def, DEF_SIZE(flag_def)));
     fprintf(file, "%s = \"%s\"\n", VAR_HIDE_UDP,
         bool_to_string(config->hide_udp));
+    fprintf(file, "%s = \"%s\"\n", VAR_TUNNEL,
+        bool_to_string(config->tunnel));
     fprintf(file, "%s = \"%s\"\n", VAR_SPLIT_MODE,
         enum_to_string(config->split, split_def, DEF_SIZE(split_def)));
     fprintf(file, "%s = \"%s\"\n", VAR_LOG_LEVEL,

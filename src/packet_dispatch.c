@@ -54,7 +54,7 @@ static inline uint8_t split_hash(uint64_t packet_hash);
 void packet_dispatch(struct config_s *config, random_state_t rng,
     uint8_t *packet, size_t packet_len, uint64_t packet_hash,
     unsigned packet_rep, struct ethhdr **allowed_packets,
-    struct iphdr **tunneled_packets, uint8_t *buff)
+    struct ethhdr **tunneled_packets, uint8_t *buff)
 {
     // Initialise pointers to various packet headers.
     struct ethhdr *eth_header;
@@ -104,7 +104,7 @@ void packet_dispatch(struct config_s *config, random_state_t rng,
         }
     
         // Get the protocol handlers:
-        if (tcp_header->dest != htons(80))
+        if (tcp_header->dest == htons(80))
             protocol = protocol_get_def(config->tcp_proto);
     }
     else
@@ -155,8 +155,7 @@ void packet_dispatch(struct config_s *config, random_state_t rng,
                 allowed_packets[allow_i++] = (struct ethhdr *)fragments[1];
                 allowed_packets[allow_i]   = NULL;
             }
-            tunneled_packets[tunnel_i++] = 
-                (struct iphdr *)(fragments[0] + sizeof(struct ethhdr));
+            tunneled_packets[tunnel_i++] = (struct ethhdr *)fragments[0];
             tunneled_packets[tunnel_i] = NULL;
         }
         else
@@ -170,7 +169,7 @@ void packet_dispatch(struct config_s *config, random_state_t rng,
     else
     {
         // Don't split packet == tunnel the entire packet.
-        tunneled_packets[tunnel_i++] = ip_header;
+        tunneled_packets[tunnel_i++] = eth_header;
         tunneled_packets[tunnel_i]   = NULL;
     }
 
@@ -189,20 +188,18 @@ void packet_dispatch(struct config_s *config, random_state_t rng,
     }
 
     // If we need to send ghost packets then do so here.
-    if (use_ghost)
+    if (use_ghost && config->tunnel)
     {
         // TODO: handle IPv6
         for (unsigned i = 0; tunneled_packets[i] != NULL; i++)
         {
             size_t tunneled_header_size, tunneled_data_size;
-            packet_init((uint8_t *)tunneled_packets[i], false, NULL, NULL,
+            packet_init((uint8_t *)tunneled_packets[i], true, NULL, NULL,
                 NULL, NULL, NULL, NULL, &tunneled_header_size,
                 &tunneled_data_size);
             uint8_t *packet_copy = buff;
             buff += tunneled_header_size + tunneled_data_size;
-            memmove(packet_copy, packet, sizeof(struct ethhdr));
-            memmove(packet_copy + sizeof(struct ethhdr), tunneled_packets[i],
-                tunneled_header_size);
+            memmove(packet_copy, tunneled_packets[i], tunneled_header_size);
 
             if (protocol != NULL)
             {
@@ -214,7 +211,7 @@ void packet_dispatch(struct config_s *config, random_state_t rng,
                 // Fallback to random data:
                 uint8_t *data;
                 size_t data_len;
-                packet_init(packet_copy, false, NULL, NULL, NULL, NULL, NULL,
+                packet_init(packet_copy, true, NULL, NULL, NULL, NULL, NULL,
                     &data, NULL, &data_len);
                 rand_state_t rng = rand_init(packet_hash);
                 rand_memory(rng, data, data_len);
@@ -416,7 +413,7 @@ static uint8_t *tcp_fragment(uint8_t *packet, size_t split, uint8_t *buff,
     ip_header_1->check   = ip_checksum(ip_header_1);
     tcp_header_1->psh    = 0;
     tcp_header_1->fin    = 0;
-    tcp_header_1->window = 0;
+//    tcp_header_1->window = 0;
     tcp_header_1->check  = 0;
     tcp_header_1->check  = tcp_checksum(ip_header_1);
     fragments[0] = buff;

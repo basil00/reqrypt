@@ -286,7 +286,7 @@ void http_server(uint16_t port, void (*callback)(struct http_user_vars_s *),
         http_parser_init(&parser);
         do
         {
-            size_t n = recv(s, request, sizeof(request)-1, 0);
+            ssize_t n = recv(s, request, sizeof(request)-1, 0);
             if (n <= 0)
             {
                 http_user_vars_free(&parser.request.vars);

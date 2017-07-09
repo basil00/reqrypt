@@ -95,7 +95,6 @@ static bool cktp_send_packet(cktp_tunnel_t tunnel, uint8_t *packet,
     size_t length);
 static bool cktp_recv_packet(cktp_tunnel_t tunnel, uint8_t **packet,
     size_t *length);
-static void log_packet(const uint8_t *packet);
 
 /*
  * Opens a CKTP tunnel for use by a client based on the given URL.
@@ -947,7 +946,7 @@ packet_too_big_error:
 /*
  * Log a tunneled packet.
  */
-static void log_packet(const uint8_t *packet)
+void log_packet(const uint8_t *packet)
 {
     if (!log_enabled(LOG_MESSAGE_PACKET))
     {

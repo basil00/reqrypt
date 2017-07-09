@@ -101,6 +101,7 @@ struct config_s
     config_flag_t  hide_tcp_fin;    // Hide TCP packets with FIN flag set?
     config_flag_t  hide_tcp_rst;    // Hide TCP packets with RST flag set?
     bool           hide_udp;        // Hide UDP packets?
+    bool           tunnel;          // Tunnel packets?
     config_split_t split;           // How to split data.
     config_ghost_t ghost;           // Send ghost packets?
     bool           ghost_check;     // Use a valid checksum for ghost packets?

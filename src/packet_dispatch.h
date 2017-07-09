@@ -32,7 +32,7 @@
 /*
  * Maximum number of fragments packet_dispatch can generate.
  */
-#define DISPATCH_MAX_FRAGMENTS    3
+#define DISPATCH_MAX_FRAGMENTS    8
 
 /*
  * Prototypes.
@@ -40,6 +40,6 @@
 void packet_dispatch(struct config_s *config, random_state_t rng,
     uint8_t *packet, size_t packet_len, uint64_t packet_hash,
     unsigned packet_rep, struct ethhdr **allowed_packets,
-    struct iphdr **tunneled_packets, uint8_t *buff);
+    struct ethhdr **tunneled_packets, uint8_t *buff);
 
 #endif      /* __PACKET_DISPATCH_H */

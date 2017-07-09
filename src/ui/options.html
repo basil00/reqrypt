@@ -31,25 +31,29 @@
    <div class="input">
     <select class="input" title="Select what HTTP traffic $PROGRAM will hide from filters."
             name="http_mode" onChange="doSubmit()">
-     <option title="Hide all HTTP traffic originating from this computer."
-             value="all">
-      Hide all HTTP traffic
+     <option title="Do not hide any HTTP traffic from this computer."
+             value="none">
+      Do not hide HTTP traffic
      </option>
-     <option title="Hide all HTTP traffic containing data originating from this computer."
-             value="data">
-      Hide HTTP data traffic only
-     </option>
-     <option title="Hide all HTTP traffic containing URL data originating from this computer."
-             value="url">
-      Hide HTTP URL traffic only
+     <option title="Split HTTP traffic containing URL data originating from this computer (split packets will not be hidden)."
+             value="split">
+      Split partial HTTP URL traffic only
      </option>
      <option title="Hide HTTP traffic containing URL data originating from this computer, but only hide part of the URL."
              value="urlpart">
       Hide partial HTTP URL traffic only
      </option>
-     <option title="Do not hide any HTTP traffic from this computer."
-             value="none">
-      Do not hide HTTP traffic
+     <option title="Hide all HTTP traffic containing URL data originating from this computer."
+             value="url">
+      Hide HTTP URL traffic only
+     </option>
+     <option title="Hide all HTTP traffic containing data originating from this computer."
+             value="data">
+      Hide HTTP data traffic only
+     </option>
+     <option title="Hide all HTTP traffic originating from this computer."
+             value="all">
+      Hide all HTTP traffic
      </option>
     </select>
    </div>

@@ -44,9 +44,12 @@
 /*
  * Prototypes.
  */
+static void allow_packets(const struct config_s *config,
+    struct ethhdr **packets);
 static void *configuration_thread(void *arg);
 static void *worker_thread(void *arg);
 static bool user_exit(http_buffer_t buff);
+void log_packet(const uint8_t *packet);
 
 /*
  * Global configuration.
@@ -60,7 +63,7 @@ struct config_s config;
 int MAIN(int argc, char **argv)
 {
     // First print GPL information:
-    printf("%s %s [%s] Copyright (C) 2014 basil\n", PROGRAM_NAME_LONG,
+    printf("%s %s [%s] Copyright (C) 2017 basil\n", PROGRAM_NAME_LONG,
         PROGRAM_VERSION, PLATFORM);
     puts("License GPLv3+: GNU GPL version 3 or later "
         "<http://gnu.org/licenses/gpl.html>.");
@@ -167,7 +170,7 @@ static void *worker_thread(void *arg)
         }
 
         // Is there a tunnel available for use?
-        if (!tunnel_ready())
+        if (config.tunnel && !tunnel_ready())
         {
             warning("unable to tunnel packet (no suitable tunnel is open); "
                 "the packet will be sent via the normal route");
@@ -189,22 +192,40 @@ static void *worker_thread(void *arg)
             packet_rep, allowed_packets, tunneled_packets, packet_buff);
 
         // Tunnel the packets
-        if (!tunnel_packets(packet, (uint8_t **)tunneled_packets, packet_hash,
-                packet_rep, config.mtu))
+        if (config.tunnel)
         {
-            continue;
+            if (!tunnel_packets(packet, (uint8_t **)tunneled_packets,
+                packet_hash, packet_rep, config.mtu))
+            {
+                continue;
+            }
+        }
+        else
+        {
+            allow_packets(&config, tunneled_packets);
         }
 
         // Allow packets.
-        for (int i = 0; allowed_packets[i] != NULL; i++)
-        {
-            size_t tot_len = sizeof(struct ethhdr) +
-                ntohs(((struct iphdr *)(allowed_packets[i] + 1))->tot_len);
-            inject_packet((uint8_t *)allowed_packets[i], tot_len);
-        }
+        allow_packets(&config, allowed_packets);
     }
 
     return NULL;
+}
+
+/*
+ * Inject packets.
+ */
+static void allow_packets(const struct config_s *config,
+    struct ethhdr **packets)
+{
+    for (int i = 0; packets[i] != NULL; i++)
+    {
+        struct iphdr *ip_header = (struct iphdr *)(packets[i] + 1);
+        size_t tot_len = sizeof(struct ethhdr) + ntohs(ip_header->tot_len);
+        if (!config->tunnel)
+            log_packet(ip_header);
+        inject_packet((uint8_t *)packets[i], tot_len);
+    }
 }
 
 /*

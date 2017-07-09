@@ -89,6 +89,7 @@ function copyToState()
                 document.state.HIDE_TCP_FIN.value = "set";
                 document.state.HIDE_TCP_RST.value = "set";
                 document.state.HIDE_TCP_DATA.value = "false";
+                document.state.TUNNEL.value = "true";
                 document.state.SPLIT_MODE.value = "none";
                 break;
             case "data": case "url": case "urlpart":
@@ -99,6 +100,7 @@ function copyToState()
                 document.state.HIDE_TCP_FIN.value = "*";
                 document.state.HIDE_TCP_RST.value = "*";
                 document.state.HIDE_TCP_DATA.value = "true";
+                document.state.TUNNEL.value = "true";
                 switch (document.options.http_mode.value)
                 {
                     case "data":
@@ -112,6 +114,17 @@ function copyToState()
                         break;
                 }
                 break;
+            case "split":
+                document.state.HIDE_TCP.value = "true";
+                document.state.HIDE_TCP_SYN.value = "*";
+                document.state.HIDE_TCP_ACK.value = "set";
+                document.state.HIDE_TCP_PSH.value = "set";
+                document.state.HIDE_TCP_FIN.value = "*";
+                document.state.HIDE_TCP_RST.value = "*";
+                document.state.HIDE_TCP_DATA.value = "true";
+                document.state.TUNNEL.value = "false";
+                document.state.SPLIT_MODE.value = "partial";
+                break;
             case "none":
                 document.state.HIDE_TCP.value = "false";
                 document.state.HIDE_TCP_SYN.value = "*";
@@ -120,6 +133,7 @@ function copyToState()
                 document.state.HIDE_TCP_FIN.value = "*";
                 document.state.HIDE_TCP_RST.value = "*";
                 document.state.HIDE_TCP_DATA.value = "false";
+                document.state.TUNNEL.value = "true";
                 document.state.SPLIT_MODE.value = "none";
                 break;
             default:
@@ -191,17 +205,24 @@ function copyFromState()
         }
         else if (document.state.HIDE_TCP_DATA.value == "true")
         {
-            switch (document.state.SPLIT_MODE.value)
+            if (document.state.TUNNEL.value == "false")
             {
-                case "none":
-                    document.options.http_mode.value = "data";
-                    break;
-                case "full":
-                    document.options.http_mode.value = "url";
-                    break;
-                default:
-                    document.options.http_mode.value = "urlpart";
-                    break;
+                document.options.http_mode.value = "split";
+            }
+            else
+            {
+                switch (document.state.SPLIT_MODE.value)
+                {
+                    case "none":
+                        document.options.http_mode.value = "data";
+                        break;
+                    case "full":
+                        document.options.http_mode.value = "url";
+                        break;
+                    default:
+                        document.options.http_mode.value = "urlpart";
+                        break;
+                }
             }
         }
         else
