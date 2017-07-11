@@ -56,6 +56,8 @@
 #define VAR_FRAG_MODE           "FRAG_MODE"
 #define VAR_TCP_PORT            "TCP_PORT"
 #define VAR_TCP_PROTO           "TCP_PROTO"
+#define VAR_TCP_PORT_2          "TCP_PORT_2"
+#define VAR_TCP_PROTO_2         "TCP_PROTO_2"
 #define VAR_UDP_PORT            "UDP_PORT"
 #define VAR_UDP_PROTO           "UDP_PROTO"
 #define VAR_MTU                 "MTU"
@@ -106,6 +108,8 @@ const struct config_s config_default =
     FRAG_TRANSPORT,
     80,
     PROTOCOL_TCP_DEFAULT,
+    443,
+    PROTOCOL_TCP_2_DEFAULT,
     53,
     PROTOCOL_UDP_DEFAULT,
     1492,
@@ -262,6 +266,10 @@ void config_callback(struct http_user_vars_s *vars)
         http_user_var_insert(vars, VAR_TCP_PORT, buff);
         http_user_var_insert(vars, VAR_TCP_PROTO,
             protocol_get_name(config.tcp_proto));
+        snprintf(buff, sizeof(buff)-1, "%u", config.tcp_port_2);
+        http_user_var_insert(vars, VAR_TCP_PORT_2, buff);
+        http_user_var_insert(vars, VAR_TCP_PROTO_2,
+            protocol_get_name(config.tcp_proto_2));
         snprintf(buff, sizeof(buff)-1, "%u", config.udp_port);
         http_user_var_insert(vars, VAR_UDP_PORT, buff);
         http_user_var_insert(vars, VAR_UDP_PROTO,
@@ -344,6 +352,13 @@ static void load_config(struct http_user_vars_s *vars, struct config_s *config)
     {
         config->tcp_proto = protocol_get(tcp_proto_name);
     }
+    http_get_int_var(vars, VAR_TCP_PORT_2, 0, UINT16_MAX,
+        sizeof(config->tcp_port_2), (uint8_t *)&config->tcp_port_2);
+    const char *tcp_proto_2_name;
+    if (http_get_string_var(vars, VAR_TCP_PROTO_2, &tcp_proto_2_name))
+    {
+        config->tcp_proto_2 = protocol_get(tcp_proto_2_name);
+    }
     http_get_int_var(vars, VAR_UDP_PORT, 0, UINT16_MAX,
         sizeof(config->udp_port), &config->udp_port);
     const char *udp_proto_name;
@@ -418,6 +433,9 @@ static void write_config(struct config_s *config)
     fprintf(file, "%s = \"%u\"\n", VAR_TCP_PORT, config->tcp_port);
     fprintf(file, "%s = \"%s\"\n", VAR_TCP_PROTO,
         protocol_get_name(config->tcp_proto));
+    fprintf(file, "%s = \"%u\"\n", VAR_TCP_PORT_2, config->tcp_port_2);
+    fprintf(file, "%s = \"%s\"\n", VAR_TCP_PROTO_2,
+        protocol_get_name(config->tcp_proto_2));
     fprintf(file, "%s = \"%u\"\n", VAR_UDP_PORT, config->udp_port);
     fprintf(file, "%s = \"%s\"\n", VAR_UDP_PROTO,
         protocol_get_name(config->udp_proto));

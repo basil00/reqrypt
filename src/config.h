@@ -110,6 +110,8 @@ struct config_s
     config_frag_t  fragment;        // How to fragment packets.
     uint16_t       tcp_port;        // TCP port.
     proto_t        tcp_proto;       // TCP protocol handler.
+    uint16_t       tcp_port_2;      // TCP port (2).
+    proto_t        tcp_proto_2;     // TCP protocol handler (2).
     uint16_t       udp_port;        // UDP port.
     proto_t        udp_proto;       // UDP protocol handler.
     uint16_t       mtu;             // MTU for tunnelled packets.

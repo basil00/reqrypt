@@ -104,8 +104,10 @@ void packet_dispatch(struct config_s *config, random_state_t rng,
         }
     
         // Get the protocol handlers:
-        if (tcp_header->dest == htons(80))
+        if (tcp_header->dest == htons(config->tcp_port))
             protocol = protocol_get_def(config->tcp_proto);
+        else if (tcp_header->dest == htons(config->tcp_port_2))
+            protocol = protocol_get_def(config->tcp_proto_2);
     }
     else
     {
@@ -201,7 +203,7 @@ void packet_dispatch(struct config_s *config, random_state_t rng,
             buff += tunneled_header_size + tunneled_data_size;
             memmove(packet_copy, tunneled_packets[i], tunneled_header_size);
 
-            if (protocol != NULL)
+            if (protocol != NULL && protocol->generate != NULL)
             {
                 protocol->generate(packet_copy + sizeof(struct ethhdr),
                     packet_hash);

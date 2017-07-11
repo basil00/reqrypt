@@ -40,12 +40,45 @@ struct dnshdr
 } __attribute__((__packed__));
 
 /*
+ * TLS structures.
+ */
+struct tlshdr
+{
+    uint8_t content_type; 
+    uint16_t version;
+    uint16_t length;
+} __attribute__((__packed__));
+
+struct client_hello_s
+{
+    uint8_t type;
+    uint8_t length[3];
+    uint16_t version;
+    uint8_t random[32];
+} __attribute__((__packed__));
+
+struct extension_s
+{
+    uint16_t type;
+    uint16_t length;
+} __attribute__((__packed__));
+
+struct sni_s
+{
+    uint16_t length;
+    uint16_t type;
+    uint8_t name_len;
+} __attribute__((__packed__));
+
+/*
  * Prototypes.
  */
 static bool http_url_match(uint8_t *packet, size_t *start, size_t *end);
 static void http_url_generate(uint8_t *packet, uint64_t hash);
 static bool dns_match(uint8_t *packet, size_t *start, size_t *end);
 static void dns_generate(uint8_t *packet, uint64_t hash);
+static bool tls_sni_match(uint8_t *packet, size_t *start, size_t *end);
+static void tls_sni_generate(uint8_t *packet, uint64_t hash);
 
 /*
  * Global pre-defined protocols:
@@ -54,6 +87,7 @@ static const struct proto_s protocols[] =
 {
     {"http_url", http_url_match, http_url_generate},
     {"dns", dns_match, dns_generate},
+    {"tls_sni", tls_sni_match, /*tsl_sni_generate*/NULL},
     {NULL, NULL, NULL}
 };
 
@@ -340,4 +374,94 @@ void dns_generate(uint8_t *packet, uint64_t hash)
     labels[i++] = 0x1;
     rand_free(rng);
 }
+
+/*
+ * Match a TLS
+ */
+bool tls_sni_match(uint8_t *packet, size_t *start, size_t *end)
+{
+    uint8_t *data;
+    ssize_t data_len;
+    packet_init(packet, false, NULL, NULL, NULL, NULL, NULL, &data, NULL,
+        &data_len);
+    if (data == NULL)
+    {
+        return false;
+    }
+    if (data_len <= sizeof(struct tlshdr))
+    {
+        return false;
+    }
+    struct tlshdr *tls_header = (struct tlshdr *)data;
+    if (tls_header->content_type != 0x16)
+    {
+        return false;
+    }
+    data_len -= sizeof(struct tlshdr);
+    if (data_len <= sizeof(struct client_hello_s))
+    {
+        return false;
+    }
+    struct client_hello_s *client_hello =
+        (struct client_hello_s *)(tls_header + 1);
+    if (client_hello->type != 0x01)
+    {
+        return false;
+    }
+    data_len -= sizeof(struct client_hello_s);
+    if (data_len <= sizeof(uint8_t))
+    {
+        return false;
+    }
+    uint8_t *len8 = (uint8_t *)(client_hello + 1);
+    data_len -= sizeof(uint8_t) + *len8;
+    if (data_len <= sizeof(uint16_t))
+    {
+        return false;
+    }
+    uint16_t *len16 = (uint16_t *)(len8 + 1 + *len8);
+    data_len -= sizeof(uint16_t) + ntohs(*len16);
+    if (data_len <= sizeof(uint8_t))
+    {
+        return false;
+    }
+    len8 = (uint8_t *)(len16 + 1) + ntohs(*len16);
+    data_len -= sizeof(uint8_t) + *len8;
+    if (data_len <= sizeof(uint16_t))
+    {
+        return false;
+    }
+    len16 = (len8 + 1 + *len8);
+    data_len -= sizeof(uint16_t);
+    struct extension_s *extension = (struct extension *)(len16 + 1);
+    while (data_len > sizeof(struct extension_s))
+    {
+        if (extension->type == htons(0x0000))
+        {
+            data_len -= sizeof(struct extension_s);
+            if (data_len <= sizeof(struct sni_s))
+            {
+                return false;
+            }
+            struct sni_s *sni = (struct sni_s *)(extension + 1);
+            uint8_t name_len = sni->name_len;
+            if (name_len == 0)
+            {
+                return false;
+            }
+            name_len--;
+            data_len -= sizeof(struct sni_s);
+            name_len = ((ssize_t)name_len > data_len? data_len: name_len);
+            uint8_t *name = (uint8_t *)(sni + 1);
+            *start = (name - data);
+            *end   = *start + name_len;
+            return true;
+        }
+        uint16_t len = ntohs(extension->length);
+        data_len -= sizeof(struct extension_s) + len;
+        extension = (struct extension_s *)((uint8_t *)(extension + 1) + len);
+    }
+    return false;
+}
+
 

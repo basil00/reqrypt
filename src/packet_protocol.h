@@ -26,6 +26,7 @@ typedef bool (*proto_match_t)(uint8_t *packet, size_t *start, size_t *end);
 typedef void (*proto_gen_t)(uint8_t *packet, uint64_t hash);
 
 #define PROTOCOL_TCP_DEFAULT    0
+#define PROTOCOL_TCP_2_DEFAULT  2
 #define PROTOCOL_UDP_DEFAULT    1
 #define PROTOCOL_DEFAULT        PROTOCOL_TCP_DEFAULT
 
