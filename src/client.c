@@ -44,8 +44,7 @@
 /*
  * Prototypes.
  */
-static void allow_packets(const struct config_s *config,
-    struct ethhdr **packets);
+static void allow_packets(bool log, struct ethhdr **packets);
 static void *configuration_thread(void *arg);
 static void *worker_thread(void *arg);
 static bool user_exit(http_buffer_t buff);
@@ -202,11 +201,11 @@ static void *worker_thread(void *arg)
         }
         else
         {
-            allow_packets(&config, tunneled_packets);
+            allow_packets(true, tunneled_packets);
         }
 
         // Allow packets.
-        allow_packets(&config, allowed_packets);
+        allow_packets(false, allowed_packets);
     }
 
     return NULL;
@@ -215,14 +214,13 @@ static void *worker_thread(void *arg)
 /*
  * Inject packets.
  */
-static void allow_packets(const struct config_s *config,
-    struct ethhdr **packets)
+static void allow_packets(bool log, struct ethhdr **packets)
 {
     for (int i = 0; packets[i] != NULL; i++)
     {
         struct iphdr *ip_header = (struct iphdr *)(packets[i] + 1);
         size_t tot_len = sizeof(struct ethhdr) + ntohs(ip_header->tot_len);
-        if (!config->tunnel)
+        if (log)
             log_packet(ip_header);
         inject_packet((uint8_t *)packets[i], tot_len);
     }
@@ -242,8 +240,7 @@ static void *configuration_thread(void *arg)
     }
     struct config_s config;
     config_get(&config);
-    bool launch =
-        !options_get()->seen_no_launch_ui && config.launch_ui;
+    bool launch = !options_get()->seen_no_launch_ui && config.launch_ui;
 
     // Register an exit handler.
     http_register_callback("exit", user_exit);

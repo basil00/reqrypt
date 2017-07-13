@@ -78,7 +78,6 @@ static void http_url_generate(uint8_t *packet, uint64_t hash);
 static bool dns_match(uint8_t *packet, size_t *start, size_t *end);
 static void dns_generate(uint8_t *packet, uint64_t hash);
 static bool tls_sni_match(uint8_t *packet, size_t *start, size_t *end);
-static void tls_sni_generate(uint8_t *packet, uint64_t hash);
 
 /*
  * Global pre-defined protocols:
@@ -463,5 +462,4 @@ bool tls_sni_match(uint8_t *packet, size_t *start, size_t *end)
     }
     return false;
 }
-
 

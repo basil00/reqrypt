@@ -125,9 +125,7 @@ void init_capture(void)
     signal(SIGPIPE, ipfw_undo_on_signal);
     signal(SIGALRM, ipfw_undo_on_signal);
 #endif      /* DEBUG */
-#ifdef HTTPS
     ipfw(ipfw_divert_tcp_1);
-#endif
     ipfw(ipfw_divert_tcp_2);
     ipfw(ipfw_divert_udp);
     ipfw(ipfw_filter_icmp);

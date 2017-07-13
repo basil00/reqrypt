@@ -94,6 +94,8 @@ void packet_dispatch(struct config_s *config, random_state_t rng,
                     // memset(tcp_opts + i, TCPOPT_NOP, tcp_opts[i+1]);
                     uint16_t *mss_ptr = (uint16_t *)(tcp_opts + 2);
                     *mss_ptr = htons(1280);
+                    tcp_header->check = 0;
+                    tcp_header->check = tcp_checksum(ip_header);
                     break;
                 }
                 i += tcp_opts[i+1] - 1;

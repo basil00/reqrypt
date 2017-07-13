@@ -201,15 +201,11 @@ void init_capture(void)
     signal(SIGPIPE, iptables_undo_on_signal);
     signal(SIGALRM, iptables_undo_on_signal);
 #endif      /* DEBUG */
-#ifdef HTTPS
     iptables_undo_insert(ip_tables_disable_tcp_1_queue);
-#endif
     iptables_undo_insert(ip_tables_disable_tcp_2_queue);
     iptables_undo_insert(ip_tables_disable_udp_queue);
     iptables_undo_insert(ip_tables_disable_filter_icmp);
-#ifdef HTTPS
     iptables(ip_tables_enable_tcp_1_queue);
-#endif
     iptables(ip_tables_enable_tcp_2_queue);
     iptables(ip_tables_enable_udp_queue);
     iptables(ip_tables_enable_filter_icmp);
@@ -440,7 +436,7 @@ static int netfilter_get_packet(uint8_t *buff, size_t size)
     }
 
     // Copy the packet's contents to the output buffer.
-    // Also add a phoney ethernet header.
+    // Also add a phony ethernet header.
     struct ethhdr *eth_header = (struct ethhdr *)buff;
     memset(&eth_header->h_dest, 0x0, ETH_ALEN);
     memset(&eth_header->h_source, 0x0, ETH_ALEN);

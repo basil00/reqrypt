@@ -53,9 +53,7 @@ void init_capture(void)
     handle = WinDivertOpen(
         "ip and "
         "(outbound and (tcp.DstPort == 80 or"
-#ifdef HTTPS
         " tcp.DstPort == 443 or "
-#endif
         " udp.DstPort == 53) or"
         " inbound and icmp.Type == 11 and icmp.Code == 0) and "
         "ip.DstAddr != 127.0.0.1",
@@ -95,6 +93,9 @@ size_t get_packet(uint8_t *buff, size_t len)
     peth_header->pad1       = 0x0;
     peth_header->pad2       = 0x0;
     peth_header->proto      = htons(ETH_P_IP);
+
+    WinDivertHelperCalcChecksums((PVOID)(buff+offset), (UINT)(len-offset),
+        WINDIVERT_HELPER_NO_REPLACE);
 
     return (size_t)(read_len+offset);
 }
