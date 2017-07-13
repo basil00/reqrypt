@@ -184,7 +184,7 @@ static void *worker_thread(void *arg)
 
         // Dispatch the packet (fragments)
         struct ethhdr *allowed_packets[DISPATCH_MAX_FRAGMENTS+1];
-        struct iphdr *tunneled_packets[DISPATCH_MAX_FRAGMENTS+1];
+        struct ethhdr *tunneled_packets[DISPATCH_MAX_FRAGMENTS+1];
         allowed_packets[0]  = NULL;
         tunneled_packets[0] = NULL;
         packet_dispatch(&config, rng, packet, packet_len, packet_hash,

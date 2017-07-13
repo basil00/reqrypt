@@ -578,7 +578,9 @@ bool tunnel_packets(uint8_t *packet, uint8_t **packets, uint64_t hash,
     bool fit = true;
     for (size_t i = 0; packets[i] != NULL; i++)
     {
-        size_t tot_len = ntohs(((struct iphdr *)packets[i])->tot_len);
+        struct ethhdr *eth_header = (struct ethhdr *)packets[i];
+        struct iphdr *ip_header = (struct iphdr *)(eth_header + 1);
+        size_t tot_len = ntohs(ip_header->tot_len);
         fit = fit && (tot_len <= mtu);
         if (!fit)
         {
@@ -596,7 +598,9 @@ bool tunnel_packets(uint8_t *packet, uint8_t **packets, uint64_t hash,
     // Tunnel the packets:
     for (size_t i = 0; packets[i] != NULL; i++)
     {
-        cktp_tunnel_packet(tunnel->tunnel, packets[i]);
+        struct ethhdr *eth_header = (struct ethhdr *)packets[i];
+        struct iphdr *ip_header = (struct iphdr *)(eth_header + 1);
+        cktp_tunnel_packet(tunnel->tunnel, (uint8_t *)ip_header);
     }
 
     thread_unlock(&tunnels_lock);

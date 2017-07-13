@@ -1050,7 +1050,7 @@ void http_expand_content(http_buffer_t content,
             unsigned i;
             for (i = 0; i < MAX_MACRO_NAME &&
                  (c = http_buffer_getc(content)) != EOF &&
-                 (isupper(c) || c == '_'); i++)
+                 (isupper(c) || isdigit(c) || c == '_'); i++)
             {
                 macro[i] = c;
             }
