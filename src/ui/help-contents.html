@@ -31,7 +31,7 @@
   <li><a href="#options">Options Tab</a>
    <ul>
     <li><a href="#what_enabled">What is "$PROGRAM enabled"?</a>
-    <li><a href="#what_hide">What is "HTTP hiding mode"?</a>
+    <li><a href="#what_hide">What is "Hiding mode"?</a>
     <li><a href="#what_autolaunch">What is "Auto-Launch WebUI"?</a>
     <li><a href="#what_dns">What is "DNS Hiding"?</a>
     <li><a href="#what_nat">What is "Use NAT Traversal"?</a>
@@ -115,35 +115,33 @@
  <div class="answer">
   <p>
    To download and display a page, a web browser will open a TCP port 80
-   connection to a web server.
+   (for HTTP) or TCP port 443 (for HTTPS) connection to a web server.
    It then sends a <tt>HTTP GET</tt> request to the web server, and the
    web server responds by sending a <tt>HTTP OK</tt> reply.
    The <tt>HTTP GET</tt> request contains the URL and the <tt>HTTP OK</tt>
    reply contains the web page.
   </p>
   <p>
-   The <tt>HTTP GET</tt> request is send <i>upstream</i>, and the
-   <tt>HTTP OK</tt> reply is sent <i>downstream</i>.
-   $PROGRAM works by tunnelling upstream <tt>HTTP GET</tt>
-   requests to a special server that forwards the request to the web server.
-   $PROGRAM does not tunnel the downstream replies, these are sent directly
+   The requests are sent as <i>outbound</i> packets (from your computer to the
+   server), whereas the
+   replies are sent as <i>inbound</i> packets (from the server to your
+   computer).
+   Most ISP-level censorship systems work by intercepting
+   outbound packets which contain the URL data.
+   For HTTP the requested URL will be sent in clear text making such
+   traffic completely vulnerable to such censorship systems.
+   HTTPS offers more protection since the URL will be encrypted.
+   However, HTTPS will send the domain name in clear text
+   --- as part of the TLS <q>client hello</q> message ---
+   meaning that even HTTPS is vulnerable to ISP-level censorship.
+  </p>
+  <p>
+   $PROGRAM works by tunnelling outbound packets
+   to a special server that forwards the packet to the web server.
+   $PROGRAM does not tunnel any inbound packet --- these are sent directly
    from the web server to your computer via the normal route.
-  </p>
-  <p>
-   This is an effective technology because most ISP-level censorship check
-   upstream <tt>HTTP GET</tt> request <i>only</i>.
-   These systems never check downstream replies.
-   This is because only upstream requests contain the URL, and because
-   upstream requests are generally smaller (think URL size vs. web page size.)
-   It is generally infeasible to inspect all downstream web browser traffic
-   at the ISP-level.
-  </p>
-  <p>
-   This is also the motivation behind $PROGRAM.
-   By only tunnelling upstream requests a single $PROGRAM server can support
-   significantly more users than a traditional proxy server with the same
-   bandwidth constraints.
-   The savings are then passed on to all $PROGRAM users.
+   This works because typical ISP-level censorship systems do not intercept
+   inbound traffic.
   </p>
  </div>
 
@@ -154,7 +152,7 @@
   <p>
    No.
    $PROGRAM does not hide your IP address from web servers nor anybody
-   inspecting downstream traffic.
+   inspecting inbound traffic.
   </p>
   <p>
    If you desire anonymous browsing, then $PROGRAM is not for you.
@@ -236,38 +234,37 @@
  </div>
 
  <div class="question">
-  <a name="what_hide">What is "HTTP hiding mode"?</a>
+  <a name="what_hide">What is "Hiding mode"?</a>
  </div>
  <div class="answer">
   <p>
-   This decides which upstream packets are tunneled.
+   This decides which outbound packets are tunneled or split.
    The options are:
    <ol>
-    <li> <b>Hide all HTTP traffic</b>: Tunnels all upstream TCP port 80 (HTTP)
-         packets.
-    <li> <b>Hide HTTP data traffic only</b>: Tunnels all upstream TCP port 80
-         packets that contain data.
+    <li> <b>Off</b>: Do not tunnel/split any traffic.
+    <li> <b>Passive (Split Only)</b>: Split outbound packets such that no
+          single fragment contains a complete URL.
+          This mode is effective against some ISP-level censorship technologies.
+    <li> <b>Active-Low (Tunnel Partial URL)</b>: Similar to the above but
+          tunnels one of the fragments containing URL data will be tunneled.
+    <li> <b>Active-Medium (Tunnel Full URL)</b>: Similar to the above but
+          tunnels a fragment containing the full URL.
+    <li> <b>Active-High (Tunnel Data)</b>: Tunnels packets that contain data.
          TCP control packets such as SYNs, ACKs, etc., are not tunneled.
-    <li> <b>Hide HTTP URL traffic only</b>: Like above, except will split
-         upstream TCP port 80 packets into two parts.
-         The first part containing the URL is tunneled, and the part containing
-         non-URL data (e.g. other HTTP headers) is sent via the normal route.
-    <li> <b>Hide partial HTTP URL traffic only</b>: Like above, except will
-         split the URL itself into two parts.
-         This means that only part of the URL is sent via the normal route.
-    <li> <b>Do not hide HTTP traffic</b>: Do not tunnel any traffic.
+    <li> <b>Active-Highest (Tunnel Everything)</b>: Tunnel all outbound
+         packets.
    </ol>
   </p>
   <p>
    <b><i>NOTE:</i></b> Whether or not an option is effective depends on the
    ISP-level censorship technology you wish to bypass.
-   In a nutshell, the "<i>Hide all HTTP traffic</i>" is the most conservative
-   mode that is most likely to work, but is the slowest because it tunnels the
-   most packets.
-   The "<i>Hide partial HTTP URL traffic only</i>" mode is the fastest but is
-   only effective against inspection/logging systems, and some kinds of
-   non-proxying censorship systems.
-   It is recommended you use the least conservative mode that works.
+   In a nutshell, the "<i>Active-Highest (Tunnel Everything)</i>" is the most
+   conservative mode that is most likely to be effective.
+   However, this mode is also the slowest because it tunnels the most packets.
+   The "<i>Passive (Split Only)</i>" mode is the fastest but is
+   only effective against specific inspection/logging systems that 
+   (incorrectly) assume URL data will be contained within single packets.
+   It is recommended you choose the least conservative mode that works.
   </p>
  </div>
 
@@ -291,7 +288,7 @@
  </div>
  <div class="answer">
   <p>
-   This tunnels DNS requests in addition to HTTP requests.
+   This tunnels DNS requests in addition to HTTP(S) requests.
    This may be useful against ISP-level censorship systems that use
    <a href="http://en.wikipedia.org/wiki/DNS_cache_poisoning">DNS Cache
    Poisoning</a>.
@@ -355,7 +352,7 @@
    </ul>
   </p>
   <p>
-   <b><i>NOTE:</i></b> Ghost packets carry randomized HTTP (or DNS) payloads.
+   <b><i>NOTE:</i></b> Ghost packets carry randomized HTTP(S) (or DNS) payloads.
    The tunneled payload is never revealed by a ghost packet.
   </p>
   <p>
@@ -390,9 +387,7 @@
  </div>
  <div class="answer">
   <p>
-   If $PROGRAM is using the "<i>Hide HTTP URL traffic only</i>" or
-   "<i>Hide partial HTTP URL traffic only</i>" methods, this option decides
-   how the packet splitting is implemented.
+   This option decides how the packet splitting is implemented.
    The options are:
    <ul>
     <li> <b>Network layer</b>: Split packets at the network layer using

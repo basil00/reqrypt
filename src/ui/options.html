@@ -26,34 +26,35 @@
   </div>
   <div class="option">
    <div class="label">
-    HTTP hiding mode?
+    Hiding mode?
    </div>
    <div class="input">
     <select class="input" title="Select what HTTP traffic $PROGRAM will hide from filters."
             name="http_mode" onChange="doSubmit()">
-     <option title="Do not hide any HTTP traffic from this computer."
+     <option title="Do not split/tunnel HTTP(S) traffic from this computer."
              value="none">
-      Do not hide HTTP traffic
+      Off
      </option>
-     <option title="Split HTTP traffic containing URL data originating from this computer (split packets will not be hidden)."
+     <option title="Split HTTP(S) traffic containing URL data from this
+     computer (split packets will not be tunneled)."
              value="split">
-      Split partial HTTP URL traffic only
+      Passive (Split Only)
      </option>
-     <option title="Hide HTTP traffic containing URL data originating from this computer, but only hide part of the URL."
+     <option title="Tunnel HTTP(S) traffic fragments containing URL data (but only tunnel part of the URL)."
              value="urlpart">
-      Hide partial HTTP URL traffic only
+      Active-Low (Tunnel Partial URL)
      </option>
-     <option title="Hide all HTTP traffic containing URL data originating from this computer."
+     <option title="Tunnel HTTP(S) traffic containing URL data."
              value="url">
-      Hide HTTP URL traffic only
+      Active-Medium (Tunnel Full URL)
      </option>
-     <option title="Hide all HTTP traffic containing data originating from this computer."
+     <option title="Tunnel all HTTP(S) traffic containing data."
              value="data">
-      Hide HTTP data traffic only
+      Active-High (Tunnel Data)
      </option>
-     <option title="Hide all HTTP traffic originating from this computer."
+     <option title="Tunnel all HTTP(S) traffic."
              value="all">
-      Hide all HTTP traffic
+      Active-Highest (Tunnel Everything)
      </option>
     </select>
    </div>
