@@ -1,6 +1,6 @@
 /*
  * crypt.c
- * (C) 2014, all rights reserved,
+ * (C) 2017, all rights reserved,
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -1997,7 +1997,7 @@ void usage(void)
  */
 int main(int argc, const char **argv)
 {
-    printf("%s_tool %s Copyright (C) 2014 basil\n", PROGRAM_NAME,
+    printf("%s_tool %s Copyright (C) 2017 basil\n", PROGRAM_NAME,
         PROGRAM_VERSION);
     puts("License GPLv3+: GNU GPL version 3 or later "
         "<http://gnu.org/licenses/gpl.html>.");
