@@ -5,7 +5,7 @@ Section: net
 Priority: optional
 Homepage: http://reqrypt.org
 Architecture: amd64
-Depends: libc6 (>= 2.7), libgmp3c2, libssl0.9.8
+Depends: libc6 (>= 2.7), libgmp10, libssl1.0.0
 Description: Reqrypt tunnel server
  Reqrypt (REQuest ecRYPTion) is a tool for encrypting and tunneling HTTP
  request packets.  This package provides the reqrypt tunnel server.  Install
