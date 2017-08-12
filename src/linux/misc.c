@@ -169,11 +169,3 @@ void quit(int status)
     exit(status);
 }
 
-/*
- * Override memcpy with memmove.
- */
-extern void *memcpy(void *dst, const void *src, size_t size)
-{
-    return memmove(dst, src, size);
-}
-
