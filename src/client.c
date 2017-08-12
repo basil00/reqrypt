@@ -48,7 +48,6 @@ static void allow_packets(bool log, struct ethhdr **packets);
 static void *configuration_thread(void *arg);
 static void *worker_thread(void *arg);
 static bool user_exit(http_buffer_t buff);
-void log_packet(const uint8_t *packet);
 
 /*
  * Global configuration.

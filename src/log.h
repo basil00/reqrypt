@@ -46,6 +46,7 @@ void log_init(void);
 void log_message(int8_t type, const char *message, ...)
     __attribute__ ((format (printf, 2, 3)));
 bool log_html_message(http_buffer_t buff);
+void log_packet(const uint8_t *packet);
 
 #define log_get_level()                                                 \
     (__log_level)
