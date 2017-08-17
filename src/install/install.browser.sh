@@ -14,7 +14,7 @@ fi
 
 if [ -z "$BROWSER" ]
 then
-	BROWSER=x-www-browser
+	BROWSER=xdg-open
 fi
 
 if [ -x "`which $BROWSER`" ]
