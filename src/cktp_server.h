@@ -30,7 +30,7 @@ typedef struct cktp_tunnel_s *cktp_tunnel_t;
  * Prototypes.
  */
 bool cktp_init(void);
-cktp_tunnel_t cktp_open_tunnel(const char *url);
+cktp_tunnel_t cktp_open_tunnel(const char *url, size_t bps);
 void cktp_close_tunnel(cktp_tunnel_t tunnel);
 void cktp_listen(cktp_tunnel_t tunnel, int socket_out, int socket_icmp,
     unsigned threads);

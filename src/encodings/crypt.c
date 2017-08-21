@@ -1526,8 +1526,8 @@ static int crypt_server_decode(state_t state, uint32_t *source_addr,
 
             // First determine if we should service this request:
             // Note: must come after cookie check.
-            if (!quota_check(state->gbl_state->quota, state->lib, state->rng,
-                    source_addr, source_size))
+            if (!quota_check(state->gbl_state->quota, source_addr,
+                    source_size, 1))
             {
                 // Packet is likely part of a DoS, ignore it:
                 return CRYPT_ERROR_DOS;
@@ -1790,7 +1790,7 @@ static bool crypt_server_init(state_t state, bool read_cert)
         mpz_set_ui(g, CRYPT_DH_GENERATOR);
         mp_init = true;
     }
-    state->gbl_state->quota = quota_init(state->lib, CRYPT_QUOTA_RK_TIMEMIN,
+    state->gbl_state->quota = quota_init(CRYPT_QUOTA_RK_TIMEMIN,
         CRYPT_QUOTA_RK_TIMEMAX, CRYPT_QUOTA_RK_NUM_BUCKETS,
         CRYPT_QUOTA_RK_RATE);
     mpz_init(state->gbl_state->mp_certificate);

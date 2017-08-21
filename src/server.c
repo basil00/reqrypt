@@ -48,8 +48,9 @@
 #define OPTION_INIT_START       3
 #define OPTION_INIT_STOP        4
 #define OPTION_LIST             5
-#define OPTION_REMOVE           6
-#define OPTION_THREADS          7
+#define OPTION_RATE_LIMIT       6
+#define OPTION_REMOVE           7
+#define OPTION_THREADS          8
 
 #define COLOR_RED               31
 #define COLOR_GREEN             32
@@ -63,13 +64,13 @@
  * Prototypes.
  */
 static int add_servers(int argc, char **argv, int optind,
-    const uint32_t *addrs, unsigned threads);
+    const uint32_t *addrs, unsigned threads, size_t bps);
 static int remove_servers(int argc, char **argv, int optind,
     const uint32_t *addrs);
 static int list_servers(const uint32_t *addrs);
 static int init_start_servers(const uint32_t *addrs);
 static int init_stop_servers(const uint32_t *addrs);
-static int start_server(const char *url, unsigned threads);
+static int start_server(const char *url, unsigned threads, size_t bps);
 static void help(const char *progname);
 static void usage(const char *progname);
 void error(const char *message, ...);
@@ -105,12 +106,14 @@ int main(int argc, char **argv)
         {"init-start",  0,  NULL,   OPTION_INIT_START},
         {"init-stop",   0,  NULL,   OPTION_INIT_STOP},
         {"list",        0,  NULL,   OPTION_LIST},
+        {"rate-limit",  1,  NULL,   OPTION_RATE_LIMIT},
         {"remove",      0,  NULL,   OPTION_REMOVE},
         {"threads",     1,  NULL,   OPTION_THREADS},
         {NULL,          0,  NULL,   0}
     };
     int command = OPTION_NONE;
     unsigned threads = THREADS_DEFAULT;
+    size_t bps = SIZE_MAX;
 
     while (true)
     {
@@ -149,6 +152,19 @@ int main(int argc, char **argv)
                         "try `%s --help' for more information", argv[0]);
                     return EXIT_FAILURE;
                 }
+                break;
+            }
+            case OPTION_RATE_LIMIT:
+            {
+                char *end;
+                bps = strtoul(optarg, &end, 10);
+                if (bps == 0 || end == NULL || end[0] != '\0')
+                {
+                    error("unable to parse value for `--rate-limit' option; "
+                        "try `%s --help' for more information", argv[0]);
+                    return EXIT_FAILURE;
+                }
+                bps *= 1000;
                 break;
             }
             default:
@@ -191,7 +207,7 @@ int main(int argc, char **argv)
     switch (command)
     {
         case OPTION_ADD: default:
-            return add_servers(argc, argv, optind, addrs, threads);
+            return add_servers(argc, argv, optind, addrs, threads, bps);
         case OPTION_REMOVE:
             return remove_servers(argc, argv, optind, addrs);
         case OPTION_LIST:
@@ -207,7 +223,7 @@ int main(int argc, char **argv)
  * Add servers.
  */
 static int add_servers(int argc, char **argv, int optind, 
-    const uint32_t *addrs, unsigned threads)
+    const uint32_t *addrs, unsigned threads, size_t bps)
 {
     server_entry_t table = server_table_read();
     
@@ -249,7 +265,7 @@ static int add_servers(int argc, char **argv, int optind,
         {
             // Child:
             server_table_free(table);
-            return start_server(url, threads);
+            return start_server(url, threads, bps);
         }
 
         // Parent:
@@ -263,10 +279,10 @@ static int add_servers(int argc, char **argv, int optind,
 /*
  * Start a server instance.
  */
-static int start_server(const char *url, unsigned threads)
+static int start_server(const char *url, unsigned threads, size_t bps)
 {
     // Open the tunnel
-    cktp_tunnel_t tunnel = cktp_open_tunnel(url);
+    cktp_tunnel_t tunnel = cktp_open_tunnel(url, bps);
     if (tunnel == NULL)
     {
         return EXIT_FAILURE;
@@ -414,7 +430,7 @@ static int init_start_servers(const uint32_t *addrs)
             char url[strlen(entry->url)+1];
             strcpy(url, entry->url);
             server_table_free(table);
-            return start_server(url, THREADS_DEFAULT);
+            return start_server(url, THREADS_DEFAULT, SIZE_MAX);
         }
 
         // Parent:
@@ -507,6 +523,8 @@ static void help(const char *progname)
     puts("OPTIONS are:");
     puts("\t--help");
     puts("\t\tPrint this helpful message.");
+    puts("\t--rate-limit <number>");
+    puts("\t\tPer connection bandwidth limit in KBps (default is unlimited).");
     puts("\t--threads <number>");
     printf("\t\tNumber of threads per server (default is %d).\n",
         THREADS_DEFAULT);

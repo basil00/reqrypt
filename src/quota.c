@@ -31,46 +31,51 @@
  */
 struct quota_s
 {
+    random_state_t rng;             // RNG
     struct cookie_gen_s salt;       // Salt for hashing
-    mutex_t  lock;                  // Lock for resets
+    mutex_t  lock;                  // Lock
     uint32_t rps;                   // Requests-per-second
     uint32_t timemin;               // Reset time min (ms)
     uint32_t timemax;               // Reset time max (ms)
     uint64_t starttime;             // Start time
     uint64_t resettime;             // Reset time
+    uint64_t maxcount;              // Maximum count
     uint16_t countssize;            // Counts size
-    uint16_t counts[];              // Counts
+    uint64_t counts[];              // Counts
 };
 
 /*
  * Prototypes.
  */
-static uint16_t quota_hash(quota_t quota, uint32_t *ip, size_t ipsize);
+static uint64_t quota_hash(quota_t quota, uint32_t *ip, size_t ipsize);
 extern void error(const char *message, ...);
 
 /*
  * Create and initialise a quota_t.
  */
-quota_t quota_init(cktp_enc_lib_t lib, uint32_t timemin, uint32_t timemax,
+quota_t quota_init(uint32_t timemin, uint32_t timemax,
     uint16_t numcounts, uint32_t rps)
 {
-    size_t quota_size = sizeof(struct quota_s) + numcounts*sizeof(uint16_t);
+    size_t quota_size = sizeof(struct quota_s) + numcounts*sizeof(uint64_t);
     quota_t quota = (quota_t)malloc(quota_size);
     if (quota == NULL)
     {
         error("unable to allocation %zu bytes for quota tracker", quota_size);
         exit(EXIT_FAILURE);
     }
+    memset(quota, 0, quota_size);
     if (thread_lock_init(&quota->lock) != 0)
     {
         error("unable to initialise lock for quota tracker");
         exit(EXIT_FAILURE);
     }
+    quota->rng = random_init();
     quota->timemin = timemin;
     quota->timemax = timemax;
     quota->countssize = numcounts;
-    quota->resettime = lib->gettime()-1;    // Ensure reset.
-    quota->rps = (rps * 1024) / 1000;       // Redefine second = 1024ms
+    quota->resettime = gettime()/1000 - 1;      // Ensure reset.
+    quota->rps = rps;
+    quota->maxcount = 0;
     return quota;
 }
 
@@ -85,58 +90,93 @@ void quota_free(quota_t quota)
 
 /*
  * Check if we should accept the request or not.
- * true = accept
- * false = reject
  */
-bool quota_check(quota_t quota, cktp_enc_lib_t lib, random_state_t rng,
-    uint32_t *ip, size_t ipsize)
+bool quota_check(quota_t quota, uint32_t *ip, size_t ipsize, uint16_t delta)
 {
-    uint64_t currtime = lib->gettime();
+    uint64_t currtime = gettime()/1000;
     if (currtime > quota->resettime)
     {
-        // We only implement partial thread safety for speed.
-        // Worst case the wrong counter will be updated
-        uint64_t r64;
-        lib->random(rng, &r64, sizeof(r64));
         thread_lock(&quota->lock);
-        quota->resettime = currtime + r64 % (quota->timemax - quota->timemin)
-            + quota->timemin;
-        quota->starttime = currtime;
+        if (currtime > quota->resettime)
+        {
+            uint64_t r64 = random_uint64(quota->rng);
+            quota->resettime = currtime +
+                r64 % (quota->timemax - quota->timemin) + quota->timemin;
+            quota->starttime = currtime;
+            uint64_t totaltime = quota->resettime - quota->starttime;
+            quota->maxcount = (quota->rps * totaltime) / 1000 + 1;
+            random_memory(quota->rng, &quota->salt, sizeof(quota->salt));
+            memset(quota->counts, 0x0, quota->countssize*sizeof(uint64_t));
+        }
         thread_unlock(&quota->lock);
-        lib->random(rng, &quota->salt, sizeof(quota->salt));
-        memset(quota->counts, 0x0, quota->countssize*sizeof(uint16_t));
     }
 
-    uint16_t hash = quota_hash(quota, ip, ipsize);
-    uint16_t count = quota->counts[hash];
-    if (count == 0)
+    uint64_t hash = quota_hash(quota, ip, ipsize);
+    size_t idx = hash % quota->countssize;
+
+    thread_lock(&quota->lock);
+    uint64_t count = quota->counts[idx];
+    uint64_t starttime = quota->starttime;
+    uint64_t resettime = quota->resettime;
+    uint64_t maxcount  = quota->maxcount;
+    uint64_t totaltime = resettime - starttime;
+    if (count <= maxcount / 4)
     {
-        quota->counts[hash] = 1;
+        quota->counts[idx] += delta;
+        thread_unlock(&quota->lock);
         return true;
     }
-    else
+    if (count > maxcount)
     {
-        uint64_t difftime = currtime - quota->starttime;
-        uint64_t totaltime = quota->resettime - quota->starttime;
-        uint64_t limit = ((quota->rps - 1) * difftime) / 1024 +
-            totaltime / 1024 + 1;
-        if (count <= limit)
-        {
-            quota->counts[hash]++;
-            return true;
-        }
-        else
-        {
-            return false;
-        }
+        thread_unlock(&quota->lock);
+        return false;
     }
+
+    uint64_t difftime = currtime - starttime;
+    difftime += (difftime == 0? 1: 0);
+    uint64_t remtime = resettime - currtime;
+    remtime += (remtime == 0? 1: 0);
+
+    // rate = current rate
+    double rate      = (double)count / (double)difftime;
+    double projected = rate * (double)totaltime;
+    if (projected <= (double)maxcount)
+    {
+        quota->counts[idx] += delta;
+        thread_unlock(&quota->lock);
+        return true;
+    }
+
+    // rate2 = max allowable rate to stay below maxcount
+    double rate2 = (double)(maxcount - count) / (double)remtime;
+    if (rate2 >= rate)
+    {
+        quota->counts[idx] += delta;
+        thread_unlock(&quota->lock);
+        return true;
+    }
+    double ratio = rate2 / rate;
+    if (ratio < 1.0 / (double)UINT8_MAX)
+    {
+        thread_unlock(&quota->lock);
+        return false;
+    }
+
+    // Probablistic throttle:
+    uint8_t r8 = random_uint8(quota->rng);
+    bool allow = (double)r8 < ((double)UINT8_MAX * ratio);
+    if (allow)
+        quota->counts[idx] += delta;
+    thread_unlock(&quota->lock);
+    
+    return allow;
 }
 
 /*
  * Compute the hash value.
  */
-static uint16_t quota_hash(quota_t quota, uint32_t *ip, size_t ipsize)
+static uint64_t quota_hash(quota_t quota, uint32_t *ip, size_t ipsize)
 {
-    return generate_cookie16(&quota->salt, ip, sizeof(ip)) % quota->countssize;
+    return generate_cookie64(&quota->salt, ip, ipsize / sizeof(uint32_t));
 }
 

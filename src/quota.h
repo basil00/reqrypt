@@ -23,17 +23,14 @@
 #include <stdint.h>
 #include <stdlib.h>
 
-#include "cktp_encoding.h"
-
 typedef struct quota_s *quota_t;
 
 /*
  * Prototypes.
  */
-quota_t quota_init(cktp_enc_lib_t lib, uint32_t timemin, uint32_t timemax,
+quota_t quota_init(uint32_t timemin, uint32_t timemax,
     uint16_t numcounts, uint32_t rps);
 void quota_free(quota_t quota);
-bool quota_check(quota_t quota, cktp_enc_lib_t lib, random_state_t rng,
-    uint32_t *ip, size_t ipsize);
+bool quota_check(quota_t quota, uint32_t *ip, size_t ipsize, uint16_t delta);
 
 #endif      /* __QUOTA_H */

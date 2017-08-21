@@ -36,9 +36,13 @@
 #include "cktp_server.h"
 #include "cktp_url.h"
 #include "cookie.h"
+#include "quota.h"
 #include "thread.h"
 
 #define CKTP_LISTEN_THREADS_MAX     4
+#define CKTP_TUNNEL_TIME_MIN        2000
+#define CKTP_TUNNEL_TIME_MAX        4000
+#define CKTP_TUNNEL_NUM_COUNTS      4096
 
 /*
  * Prototypes.
@@ -59,7 +63,7 @@ static bool cktp_request(cktp_tunnel_t tunnel,
     const struct cktp_msg_hdr_req_s *request, size_t request_size,
     uint32_t source_addr, uint8_t *reply, size_t *reply_size);
 static void cktp_reflect(struct cktp_rflt_hdr_s *reflect, size_t reflect_size,
-    struct sockaddr_in *from_addr, int socket_icmp);
+    struct sockaddr_in *from_addr, int socket_icmp, quota_t quota);
 extern void error(const char *message, ...);
 
 /*
@@ -75,6 +79,7 @@ struct cktp_tunnel_s
     size_t overhead;                                    // Enc. Overhead.
     struct cookie_gen_s cookie_gen;                     // Cookie generator.
     char url[CKTP_MAX_URL_LENGTH+1];                    // URL.
+    quota_t quota;                                      // Quota.
 };
 
 /*
@@ -90,7 +95,7 @@ struct cktp_listen_s
 /*
  * Opens a CKTP tunnel end-point.
  */
-extern cktp_tunnel_t cktp_open_tunnel(const char *url)
+extern cktp_tunnel_t cktp_open_tunnel(const char *url, size_t bps)
 {
     if (strlen(url) >= CKTP_MAX_URL_LENGTH)
     {
@@ -211,6 +216,13 @@ extern cktp_tunnel_t cktp_open_tunnel(const char *url)
 
     // Initialise cookie generation:
     cookie_gen_init(&tunnel->cookie_gen);
+
+    // Initialize rate limits:
+    if (bps != SIZE_MAX)
+    {
+        tunnel->quota = quota_init(CKTP_TUNNEL_TIME_MIN, CKTP_TUNNEL_TIME_MAX,
+            CKTP_TUNNEL_NUM_COUNTS, bps);
+    }
 
     return tunnel;
 
@@ -420,6 +432,19 @@ params_alloc_error:
 }
 
 /*
+ * Rate limiting.
+ */
+static bool cktp_rate_limit(quota_t quota, uint32_t addr, size_t payload_size)
+{
+    if (quota == NULL)
+    {
+        return false;
+    }
+
+    return !quota_check(quota, &addr, sizeof(addr), payload_size);
+}
+
+/*
  * Main server loop.
  */
 static void *cktp_listen_loop(void *ptr)
@@ -429,6 +454,7 @@ static void *cktp_listen_loop(void *ptr)
     int socket_out  = params->socket_out;
     int socket_icmp = params->socket_icmp;
     free(params);
+    quota_t quota = tunnel->quota;
 
     struct sockaddr_in from_addr;
     struct sockaddr_in to_addr;
@@ -505,6 +531,11 @@ static void *cktp_listen_loop(void *ptr)
                 {
                     cktp_add_transport_header(tunnel, &reply, &reply_size,
                         info);
+                    if (cktp_rate_limit(quota, from_addr.sin_addr.s_addr,
+                            reply_size))
+                    {
+                        continue;
+                    }
                     sendto(tunnel->socket, reply, reply_size, 0,
                         (struct sockaddr *)&from_addr, sizeof(from_addr));
                 }
@@ -523,7 +554,8 @@ static void *cktp_listen_loop(void *ptr)
             {
                 struct cktp_rflt_hdr_s *reflect =
                     (struct cktp_rflt_hdr_s *)request;
-                cktp_reflect(reflect, payload_size, &from_addr, socket_icmp);
+                cktp_reflect(reflect, payload_size, &from_addr, socket_icmp,
+                    quota);
                 break;
             }
             case CKTP_TYPE_IPv4:
@@ -532,6 +564,11 @@ static void *cktp_listen_loop(void *ptr)
 
                 if (!cktp_is_valid_packet(ip_header, payload_size,
                     from_addr.sin_addr.s_addr))
+                {
+                    continue;
+                }
+                if (cktp_rate_limit(quota, from_addr.sin_addr.s_addr,
+                        payload_size))
                 {
                     continue;
                 }
@@ -563,6 +600,11 @@ static void *cktp_listen_loop(void *ptr)
                 }
                 cktp_add_transport_header(tunnel, &reply_ptr, &reply_size,
                     info);
+                if (cktp_rate_limit(quota, from_addr.sin_addr.s_addr,
+                        reply_size))
+                {
+                    continue;
+                }
                 sendto(tunnel->socket, reply_ptr, reply_size, 0,
                     (struct sockaddr *)&from_addr, sizeof(from_addr));
                 break;
@@ -864,7 +906,7 @@ stream_error:
  * Reflect packets back to the source.
  */
 static void cktp_reflect(struct cktp_rflt_hdr_s *reflect, size_t reflect_size,
-    struct sockaddr_in *from_addr, int socket_icmp)
+    struct sockaddr_in *from_addr, int socket_icmp, quota_t quota)
 {
     if (reflect_size < sizeof(struct cktp_rflt_hdr_s) +
             sizeof(struct icmphdr) + sizeof(struct iphdr) + 8 ||
@@ -885,6 +927,11 @@ static void cktp_reflect(struct cktp_rflt_hdr_s *reflect, size_t reflect_size,
     struct iphdr *ip_header = (struct iphdr *)(icmp_header + 1);
     if (reflect_size != sizeof(struct icmphdr) +
             ip_header->ihl*sizeof(uint32_t) + 8)
+    {
+        return;
+    }
+
+    if (cktp_rate_limit(quota, from_addr->sin_addr.s_addr, reflect_size))
     {
         return;
     }
