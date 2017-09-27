@@ -37,6 +37,7 @@
 #include <unistd.h>
 
 #include "cfg.h"
+#include "config.h"
 #include "cktp.h"
 #include "cktp_server.h"
 #include "cktp_url.h"
@@ -48,15 +49,11 @@
 #define OPTION_INIT_START       3
 #define OPTION_INIT_STOP        4
 #define OPTION_LIST             5
-#define OPTION_RATE_LIMIT       6
-#define OPTION_REMOVE           7
-#define OPTION_THREADS          8
+#define OPTION_REMOVE           6
 
 #define COLOR_RED               31
 #define COLOR_GREEN             32
 #define COLOR_YELLOW            33
-
-#define THREADS_DEFAULT         3
 
 #define MAX_ADDRS               8
 
@@ -64,13 +61,13 @@
  * Prototypes.
  */
 static int add_servers(int argc, char **argv, int optind,
-    const uint32_t *addrs, unsigned threads, size_t bps);
+    const uint32_t *addrs);
 static int remove_servers(int argc, char **argv, int optind,
     const uint32_t *addrs);
 static int list_servers(const uint32_t *addrs);
 static int init_start_servers(const uint32_t *addrs);
 static int init_stop_servers(const uint32_t *addrs);
-static int start_server(const char *url, unsigned threads, size_t bps);
+static int start_server(const char *url);
 static void help(const char *progname);
 static void usage(const char *progname);
 void error(const char *message, ...);
@@ -106,14 +103,10 @@ int main(int argc, char **argv)
         {"init-start",  0,  NULL,   OPTION_INIT_START},
         {"init-stop",   0,  NULL,   OPTION_INIT_STOP},
         {"list",        0,  NULL,   OPTION_LIST},
-        {"rate-limit",  1,  NULL,   OPTION_RATE_LIMIT},
         {"remove",      0,  NULL,   OPTION_REMOVE},
-        {"threads",     1,  NULL,   OPTION_THREADS},
         {NULL,          0,  NULL,   0}
     };
     int command = OPTION_NONE;
-    unsigned threads = THREADS_DEFAULT;
-    size_t bps = SIZE_MAX;
 
     while (true)
     {
@@ -142,31 +135,6 @@ int main(int argc, char **argv)
                 }
                 command = option;
                 break;
-            case OPTION_THREADS:
-            {
-                char *end;
-                threads = strtoul(optarg, &end, 10);
-                if (threads == 0 || end == NULL || end[0] != '\0')
-                {
-                    error("unable to parse value for `--threads' option; "
-                        "try `%s --help' for more information", argv[0]);
-                    return EXIT_FAILURE;
-                }
-                break;
-            }
-            case OPTION_RATE_LIMIT:
-            {
-                char *end;
-                bps = strtoul(optarg, &end, 10);
-                if (bps == 0 || end == NULL || end[0] != '\0')
-                {
-                    error("unable to parse value for `--rate-limit' option; "
-                        "try `%s --help' for more information", argv[0]);
-                    return EXIT_FAILURE;
-                }
-                bps *= 1000;
-                break;
-            }
             default:
                 error("unable to parse options; try `%s --help' for more "
                     "information", argv[0]);
@@ -207,7 +175,7 @@ int main(int argc, char **argv)
     switch (command)
     {
         case OPTION_ADD: default:
-            return add_servers(argc, argv, optind, addrs, threads, bps);
+            return add_servers(argc, argv, optind, addrs);
         case OPTION_REMOVE:
             return remove_servers(argc, argv, optind, addrs);
         case OPTION_LIST:
@@ -223,7 +191,7 @@ int main(int argc, char **argv)
  * Add servers.
  */
 static int add_servers(int argc, char **argv, int optind, 
-    const uint32_t *addrs, unsigned threads, size_t bps)
+    const uint32_t *addrs)
 {
     server_entry_t table = server_table_read();
     
@@ -265,7 +233,7 @@ static int add_servers(int argc, char **argv, int optind,
         {
             // Child:
             server_table_free(table);
-            return start_server(url, threads, bps);
+            return start_server(url);
         }
 
         // Parent:
@@ -279,8 +247,16 @@ static int add_servers(int argc, char **argv, int optind,
 /*
  * Start a server instance.
  */
-static int start_server(const char *url, unsigned threads, size_t bps)
+static int start_server(const char *url)
 {
+    // Read the configuration file:
+    config_init();
+    struct config_s config;
+    config_get(&config);
+    unsigned threads = config.threads;
+    size_t bps = (config.kb_per_sec == 0? SIZE_MAX: 
+        (size_t)config.kb_per_sec * 1000);
+
     // Open the tunnel
     cktp_tunnel_t tunnel = cktp_open_tunnel(url, bps);
     if (tunnel == NULL)
@@ -430,7 +406,7 @@ static int init_start_servers(const uint32_t *addrs)
             char url[strlen(entry->url)+1];
             strcpy(url, entry->url);
             server_table_free(table);
-            return start_server(url, THREADS_DEFAULT, SIZE_MAX);
+            return start_server(url);
         }
 
         // Parent:
@@ -523,11 +499,6 @@ static void help(const char *progname)
     puts("OPTIONS are:");
     puts("\t--help");
     puts("\t\tPrint this helpful message.");
-    puts("\t--rate-limit <number>");
-    puts("\t\tPer connection bandwidth limit in KBps (default is unlimited).");
-    puts("\t--threads <number>");
-    printf("\t\tNumber of threads per server (default is %d).\n",
-        THREADS_DEFAULT);
     putchar('\n');
 }
 

@@ -249,7 +249,6 @@ void http_user_var_insert(struct http_user_vars_s *vars, const char *var,
 
     vars->vars[vars->size].var = strdup(var);
     vars->vars[vars->size].val = strdup(val);
-    fprintf(stderr, "added %s = %s\n", var, val);
     if (vars->vars[vars->size].var == NULL ||
         vars->vars[vars->size].val == NULL)
     {

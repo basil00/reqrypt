@@ -24,10 +24,16 @@
 
 #include "cfg.h"
 #include "http_server.h"
-#include "log.h"
 #include "packet_protocol.h"
 
+#ifdef CLIENT
+#include "log.h"
 #define CONFIG_FILENAME         PROGRAM_NAME ".config"
+#endif
+
+#ifdef SERVER
+#define CONFIG_FILENAME         "/etc/reqryptd/reqrypt.conf"
+#endif
 
 typedef uint8_t config_enum_t;
 
@@ -92,6 +98,7 @@ typedef config_enum_t config_frag_t;
  */
 struct config_s
 {
+#ifdef CLIENT
     bool           enabled;         // Is circumvention enabled?
     bool           hide_tcp;        // Hide TCP packets?
     bool           hide_tcp_data;   // Hide TCP data packets?
@@ -116,6 +123,12 @@ struct config_s
     proto_t        udp_proto;       // UDP protocol handler.
     uint16_t       mtu;             // MTU for tunnelled packets.
     bool           launch_ui;       // Auto-launch the UI on startup.
+#endif
+
+#ifdef SERVER
+    uint8_t        threads;         // Number of threads.
+    uint32_t       kb_per_sec;      // Rate limit.
+#endif
 };
 
 /*
