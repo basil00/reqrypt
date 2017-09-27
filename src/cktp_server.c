@@ -291,6 +291,10 @@ extern void cktp_close_tunnel(cktp_tunnel_t tunnel)
             info->free(state);
         }
     }
+    if (tunnel->quota != NULL)
+    {
+        quota_free(tunnel->quota);
+    }
     free(tunnel);
 }
 

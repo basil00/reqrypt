@@ -65,6 +65,9 @@
 #define VAR_ADD_URL             "ADD_URL"
 #define VAR_DEL_URL             "DEL_URL"
 
+#define VAR_THREADS             "THREADS"
+#define VAR_KB_PER_SEC          "KB_PER_SEC"
+
 /*
  * Parser definitions.
  */
@@ -90,6 +93,7 @@ struct config_s config;
  */
 const struct config_s config_default =
 {
+#ifdef CLIENT
     .enabled = true,
     .hide_tcp = true,
     .hide_tcp_data = false,
@@ -114,11 +118,18 @@ const struct config_s config_default =
     .udp_proto = PROTOCOL_UDP_DEFAULT,
     .mtu = 1492,
     .launch_ui = true
+#endif
+
+#ifdef SERVER
+    .threads = 1,
+    .kb_per_sec = 150       // Default = 150KBps
+#endif
 };
 
 /*
  * Enum definitions:
  */
+#ifdef CLIENT
 struct http_pair_s flag_def[] =
 {
     {FLAG_UNSET_NAME,           FLAG_UNSET},
@@ -150,6 +161,8 @@ struct http_pair_s frag_def[] =
     {FRAG_NETWORK_NAME,         FRAG_NETWORK},
     {FRAG_TRANSPORT_NAME,       FRAG_TRANSPORT}
 };
+#endif
+
 #define DEF_SIZE(def)   (sizeof(def) / sizeof(struct http_pair_s))
 
 /*
@@ -165,11 +178,218 @@ static const char *token_to_string(token_t token);
 static token_t read_token(FILE *file, char *token);
 
 /*
+ * Initialise a struct http_user_vars_s.
+ */
+void http_user_vars_init(struct http_user_vars_s *vars)
+{
+    vars->size   = 0;
+    vars->sorted = true;
+}
+
+/*
+ * Free all dynamic memory associated with a struct http_user_vars_s.
+ */
+void http_user_vars_free(struct http_user_vars_s *vars)
+{
+    for (size_t i = 0; i < vars->size; i++)
+    {
+        free((void *)vars->vars[i].var);
+        free((void *)vars->vars[i].val);
+    }
+    vars->size = 0;
+}
+
+/*
+ * Comparison function for struct http_user_var_s.
+ */
+int http_user_var_s_compare(const void *a, const void *b)
+{
+    const struct http_user_var_s *a1 = (const struct http_user_var_s *)a;
+    const struct http_user_var_s *b1 = (const struct http_user_var_s *)b;
+    return strcmp(a1->var, b1->var);
+}
+
+/*
+ * Given a set of user vars and a var name, return the var val if it exists,
+ * or NULL otherwise.
+ */
+const char *http_user_var_lookup(const struct http_user_vars_s *vars,
+    const char *var)
+{
+    if (!vars->sorted)
+    {
+        qsort((void *)vars->vars, vars->size, sizeof(struct http_user_var_s),
+            http_user_var_s_compare);
+        ((struct http_user_vars_s *)vars)->sorted = true;
+    }
+    struct http_user_var_s user_var_key;
+    user_var_key.var = var;
+    struct http_user_var_s *user_var = bsearch(&user_var_key,
+        vars->vars, vars->size, sizeof(struct http_user_var_s),
+        http_user_var_s_compare);
+    if (user_var == NULL)
+    {
+        return NULL;
+    }
+    return user_var->val;
+}
+
+/*
+ * Insert a user var into a user var set.
+ */
+void http_user_var_insert(struct http_user_vars_s *vars, const char *var,
+    const char *val)
+{
+    if (vars->size >= MAX_USER_VARS)
+    {
+        warning("unable to store user variable %s=%s: store size %u exceeded",
+            var, val, MAX_USER_VARS);
+        return;
+    }
+
+    vars->vars[vars->size].var = strdup(var);
+    vars->vars[vars->size].val = strdup(val);
+    fprintf(stderr, "added %s = %s\n", var, val);
+    if (vars->vars[vars->size].var == NULL ||
+        vars->vars[vars->size].val == NULL)
+    {
+        error("unable to allocate memory for user var %s=%s", var, val);
+    }
+    vars->size++;
+    vars->sorted = false;
+}
+
+/*
+ * Comparison function for struct macro_s.
+ */
+int http_pair_s_compare(const void *a, const void *b)
+{
+    const struct http_pair_s *a1 = (const struct http_pair_s *)a;
+    const struct http_pair_s *b1 = (const struct http_pair_s *)b;
+    return strcmp(a1->key, b1->key);
+}
+
+bool http_get_enum_var(const struct http_user_vars_s *vars,
+    const char *var, struct http_pair_s *def, size_t def_len, uint8_t *ival)
+{
+    const char *val = http_user_var_lookup(vars, var);
+    if (val == NULL)
+    {
+        return false;
+    }
+
+    struct http_pair_s pair_key;
+    pair_key.key = val;
+    struct http_pair_s *pair_val = bsearch(&pair_key, def, def_len,
+        sizeof(struct http_pair_s), http_pair_s_compare);
+
+    if (pair_val != NULL)
+    {
+        *ival = pair_val->val;
+        return true;
+    }
+
+    warning("unable to get enum value of var \"%s\"; value \"%s\" is not "
+        "valid", var, val);
+    return false;
+}
+
+/*
+ * Helper functions for user vars.
+ */
+
+bool http_get_string_var(const struct http_user_vars_s *vars,
+    const char *var, const char **sval)
+{
+    const char *val = http_user_var_lookup(vars, var);
+    if (val == NULL)
+    {
+        return false;
+    }
+    *sval = val;
+    return true;
+}
+
+bool http_get_bool_var(const struct http_user_vars_s *vars,
+    const char *var, bool *bval)
+{
+    const char *val = http_user_var_lookup(vars, var);
+    if (val == NULL)
+    {
+        return false;
+    }
+    if (strcmp(val, "true") == 0)
+    {
+        *bval = true;
+        return true;
+    }
+    if (strcmp(val, "false") == 0)
+    {
+        *bval = false;
+        return true;
+    }
+    warning("unable to get boolean value of var \"%s\"; expected \"true\" "
+        "or \"false\", found \"%s\"", var, val);
+    return false;
+}
+
+bool http_get_int_var(const struct http_user_vars_s *vars,
+    const char *var, unsigned min, unsigned max, size_t size, void *ival)
+{
+    const char *val = http_user_var_lookup(vars, var);
+    if (val == NULL)
+    {
+        return false;
+    }
+
+    unsigned ival0 = 0, i;
+    for (i = 0; val[i]; i++)
+    {
+        if (!isdigit(val[i]))
+        {
+            goto int_error;
+        }
+        unsigned ival1 = ival0 * 10 + (val[i] - '0');
+        if (ival1 < ival0 || ival1 > max)
+        {
+            goto int_error;
+        }
+        ival0 = ival1;
+    }
+    if (i == 0)
+    {
+        goto int_error;
+    }
+
+    switch (size)
+    {
+        case 1:
+            *((uint8_t *)ival) = (uint8_t)ival0;
+            break;
+        case 2:
+            *((uint16_t *)ival) = (uint16_t)ival0;
+            break;
+        case 4:
+            *((uint32_t *)ival) = (uint32_t)ival0;
+            break;
+        default:
+            panic("expected size of 1, 2, or 4");
+    }
+    return true;
+
+int_error:
+    warning("unable to get integer value of var \"%s\"; expected an integer "
+        "in range %u..%u, found \"%s\"", var, min, max, val);
+    return false;
+}
+
+/*
  * Initialise this module.
  */
 void config_init(void)
 {
     thread_lock_init(&config_lock);
+#ifdef CLIENT
     qsort(flag_def, DEF_SIZE(flag_def), sizeof(struct http_pair_s),
         http_pair_s_compare);
     qsort(split_def, DEF_SIZE(split_def), sizeof(struct http_pair_s),
@@ -180,6 +400,7 @@ void config_init(void)
         http_pair_s_compare);
     qsort(frag_def, DEF_SIZE(frag_def), sizeof(struct http_pair_s),
         http_pair_s_compare);
+#endif
     read_config(&config);
 }
 
@@ -217,6 +438,7 @@ static const char *enum_to_string(config_enum_t e, struct http_pair_s *def,
     panic("undefined enum value 0x%X", e);
 }
 
+#ifdef CLIENT
 /*
  * Call-back from the configuration server; save the configuration state.
  */
@@ -308,12 +530,14 @@ void config_callback(struct http_user_vars_s *vars)
         }
     }
 }
+#endif
 
 /*
  * Reads the configuration from a set of vars.
  */
 static void load_config(struct http_user_vars_s *vars, struct config_s *config)
 {
+#ifdef CLIENT
     http_get_bool_var(vars, VAR_ENABLED, &config->enabled);
     http_get_bool_var(vars, VAR_HIDE_TCP, &config->hide_tcp);
     http_get_bool_var(vars, VAR_HIDE_TCP_DATA, &config->hide_tcp_data);
@@ -369,8 +593,17 @@ static void load_config(struct http_user_vars_s *vars, struct config_s *config)
     http_get_int_var(vars, VAR_MTU, 0, UINT16_MAX, sizeof(config->mtu),
         (uint8_t *)&config->mtu);
     http_get_bool_var(vars, VAR_LAUNCH_UI, &config->launch_ui);
+#endif
+
+#ifdef SERVER
+    http_get_int_var(vars, VAR_THREADS, 0, UINT8_MAX,
+        sizeof(config->threads), &config->threads);
+    http_get_int_var(vars, VAR_KB_PER_SEC, 0, UINT32_MAX,
+        sizeof(config->kb_per_sec), &config->kb_per_sec);
+#endif
 }
 
+#ifdef CLIENT
 /*
  * Write a configuration to the config file.
  */
@@ -453,6 +686,7 @@ static void write_config(struct config_s *config)
             CONFIG_TMP_FILENAME, CONFIG_FILENAME);
     }
 }
+#endif
 
 /*
  * Read the configuration from the config file.
@@ -467,6 +701,7 @@ static void read_config(struct config_s *config)
     FILE *file = fopen(filename, "r");
     if (file == NULL)
     {
+#ifdef CLIENT
         warning("unable to open configuration file \"%s\" for reading; "
             "will use backup configuration file", filename);
         filename = CONFIG_BAK_FILENAME;
@@ -477,6 +712,11 @@ static void read_config(struct config_s *config)
                 "reading", filename);
             return;
         }
+#endif
+
+#ifdef SERVER
+        return;
+#endif
     }
 
     // Parse the configuration file:
@@ -484,7 +724,7 @@ static void read_config(struct config_s *config)
     http_user_vars_init(&vars);
     char var[MAX_TOKEN_LENGTH+1];
     char val[MAX_TOKEN_LENGTH+1];
-    bool success;
+    bool success = false;
     while (true)
     {
         token_t t = expect_token(filename, file, var, TOKEN_VAR, true);

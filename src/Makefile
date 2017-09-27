@@ -47,6 +47,7 @@ CLIENT_OBJS = \
 SERVER_OBJS = \
     base64.o \
     checksum.o \
+    config.o \
     cktp_common.o \
     cktp_encoding.o \
     cktp_server.o \
