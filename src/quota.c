@@ -80,10 +80,6 @@ quota_t quota_init(uint32_t timemin, uint32_t timemax,
     quota->rps = rps;
     quota->maxcount = 0;
 
-    debug_log = fopen("/tmp/quota.DEBUG", "a");
-    if (debug_log == NULL)
-        debug_log = stderr;
-
     return quota;
 }
 
