@@ -40,8 +40,8 @@
 #include "thread.h"
 
 #define CKTP_LISTEN_THREADS_MAX     4
-#define CKTP_TUNNEL_TIME_MIN        2000
-#define CKTP_TUNNEL_TIME_MAX        4000
+#define CKTP_TUNNEL_TIME_MIN        10000
+#define CKTP_TUNNEL_TIME_MAX        20000
 #define CKTP_TUNNEL_NUM_COUNTS      4096
 
 /*

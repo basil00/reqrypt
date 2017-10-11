@@ -23,6 +23,7 @@
 
 #include "cookie.h"
 #include "cktp_encoding.h"
+#include "misc.h"
 #include "quota.h"
 #include "thread.h"
 
@@ -38,7 +39,7 @@ struct quota_s
     uint32_t timemin;               // Reset time min (ms)
     uint32_t timemax;               // Reset time max (ms)
     uint64_t starttime;             // Start time
-    uint64_t resettime;             // Reset time
+    uint64_t totaltime;             // Total time until reset
     uint64_t maxcount;              // Maximum count
     uint16_t countssize;            // Counts size
     uint64_t counts[];              // Counts
@@ -69,13 +70,20 @@ quota_t quota_init(uint32_t timemin, uint32_t timemax,
         error("unable to initialise lock for quota tracker");
         exit(EXIT_FAILURE);
     }
+    uint64_t currtime = gettime()/1000;
     quota->rng = random_init();
     quota->timemin = timemin;
     quota->timemax = timemax;
     quota->countssize = numcounts;
-    quota->resettime = gettime()/1000 - 1;      // Ensure reset.
+    quota->starttime = currtime;
+    quota->totaltime = 0;               // Ensure reset.
     quota->rps = rps;
     quota->maxcount = 0;
+
+    debug_log = fopen("/tmp/quota.DEBUG", "a");
+    if (debug_log == NULL)
+        debug_log = stderr;
+
     return quota;
 }
 
@@ -94,32 +102,28 @@ void quota_free(quota_t quota)
 bool quota_check(quota_t quota, uint32_t *ip, size_t ipsize, uint16_t delta)
 {
     uint64_t currtime = gettime()/1000;
-    if (currtime > quota->resettime)
-    {
-        thread_lock(&quota->lock);
-        if (currtime > quota->resettime)
-        {
-            uint64_t r64 = random_uint64(quota->rng);
-            quota->resettime = currtime +
-                r64 % (quota->timemax - quota->timemin) + quota->timemin;
-            quota->starttime = currtime;
-            uint64_t totaltime = quota->resettime - quota->starttime;
-            quota->maxcount = (quota->rps * totaltime) / 1000 + 1;
-            random_memory(quota->rng, &quota->salt, sizeof(quota->salt));
-            memset(quota->counts, 0x0, quota->countssize*sizeof(uint64_t));
-        }
-        thread_unlock(&quota->lock);
-    }
-
+    uint64_t usedtime = currtime - quota->starttime;
     uint64_t hash = quota_hash(quota, ip, ipsize);
     size_t idx = hash % quota->countssize;
 
     thread_lock(&quota->lock);
+    if (usedtime >= quota->totaltime)
+    {
+        uint64_t r64 = random_uint64(quota->rng);
+        uint64_t resettime = currtime +
+            r64 % (quota->timemax - quota->timemin) + quota->timemin;
+        quota->starttime = currtime;
+        quota->totaltime = resettime - quota->starttime;
+        quota->maxcount = (quota->rps * quota->totaltime) / 1000 + 1;
+        random_memory(quota->rng, &quota->salt, sizeof(quota->salt));
+        memset(quota->counts, 0x0, quota->countssize*sizeof(uint64_t));
+    }
+
     uint64_t count = quota->counts[idx];
     uint64_t starttime = quota->starttime;
-    uint64_t resettime = quota->resettime;
+    uint64_t resettime = quota->starttime + quota->totaltime;
     uint64_t maxcount  = quota->maxcount;
-    uint64_t totaltime = resettime - starttime;
+    uint64_t totaltime = quota->totaltime;
     if (count <= maxcount / 4)
     {
         quota->counts[idx] += delta;
