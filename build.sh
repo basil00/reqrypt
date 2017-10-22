@@ -43,7 +43,7 @@ make client_install32
 make server_install
 
 # Build Windows 64/32-bit
-DIVERT_VERSION=WinDivert-1.2.0-rc-MINGW
+DIVERT_VERSION=WinDivert-1.3.0-MINGW
 set +x
 if [ "$DIVERT" = "" ]
 then
