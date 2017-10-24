@@ -47,7 +47,7 @@ OBJS = \
     $(PLATFORM)/misc.obj \
     $(PLATFORM)/resources.obj
 
-client: CFLAGS = $(CLIENT_CFLAGS) -I$(DIVERT_ROOT)/include/
+client: CFLAGS = $(CLIENT_CFLAGS) -I$(DIVERT_ROOT)/include/ -mno-ms-bitfields
 client: CLIBS = -lws2_32 -lkernel32 -lWinDivert -L$(DIVERT_ROOT)/$(ARCH)/
 client: $(OBJS)
 	$(CC) -o $(CLIENT_PROG).exe $(OBJS) -Wl,-subsystem,windows $(CLIBS)
@@ -59,9 +59,9 @@ $(PLATFORM)/resources.obj: $(PLATFORM)/resources.rc
 %.obj: %.c http_data.c install_data.c
 	$(CC) $(CFLAGS) -o $@ -c $<
 
-encodings/natural.obj: CFLAGS = $(CLIENT_CFLAGS) -O3
+encodings/natural.obj: CFLAGS = $(CLIENT_CFLAGS) -O3 -mno-ms-bitfields
 encodings/aes_hardware.obj: CFLAGS = $(CLIENT_CFLAGS) -maes -mssse3 \
-    -flax-vector-conversions
+    -flax-vector-conversions -mno-ms-bitfields
 
 http_data.c: ui/* tools/file2c.exe
 	(cd ui/; ../tools/file2c.exe * > ../http_data.c)
