@@ -93,8 +93,7 @@ client_debug: CFLAGS = $(CLIENT_DEBUG_CFLAGS)
 client_debug: CLIBS = $(CLIENT_CLIBS)
 client_debug: $(CLIENT_OBJS) http_data.c
 	$(CC) -o $(CLIENT_PROG) $(CLIENT_OBJS) $(CLIBS)
-	(cd tools; ./build_selfextr.sh header_debug.sh $(CLIENT_PROG))
-	mv tools/$(CLIENT_PROG).sh $(CLIENT_PROG).debug
+	mv $(CLIENT_PROG) $(CLIENT_PROG).debug
 
 $(CLIENT_PROG): client
 

@@ -42,31 +42,20 @@ ctool:
 	 make -j 4 ctool)
 
 client_install: client
-	(cd src/tools; \
-	 ./build_clientdeb.sh $(PACKAGE_NAME) $(PACKAGE_VERSION_SHORT); \
-	 ./build_selfextr.sh header.sh $(CLIENT_PROG); \
-	 mv $(PACKAGE_NAME)_*.deb ../../; \
-	 mv $(CLIENT_PROG).sh \
-		../../$(CLIENT_PROG)-$(PACKAGE_VERSION_SHORT)-linux$(BITS).sh)
-
+	(cd src; \
+	 cp reqrypt ../$(CLIENT_PROG)-$(PACKAGE_VERSION_SHORT)-linux64)
 
 client_install32: client32
-	(cd src/tools; \
-	 ./build_selfextr.sh header.sh $(CLIENT_PROG); \
-	 mv $(CLIENT_PROG).sh \
-		../../$(CLIENT_PROG)-$(PACKAGE_VERSION_SHORT)-linux32.sh)
+	(cd src; \
+	 cp reqrypt ../$(CLIENT_PROG)-$(PACKAGE_VERSION_SHORT)-linux32)
 
 client_install_freebsd: client
-	(cd src/tools; \
-	 ./build_selfextr.sh header_freebsd.sh $(CLIENT_PROG); \
-	 mv $(CLIENT_PROG).sh \
-		../../$(CLIENT_PROG)-$(PACKAGE_VERSION_SHORT)-freebsd$(BITS).sh)
+	(cd src; \
+	 cp reqrypt ../$(CLIENT_PROG)-$(PACKAGE_VERSION_SHORT)-freebsd)
 
 client_install_macosx: client
-	(cd src/tools; \
-	 ./build_selfextr.sh header_freebsd.sh $(CLIENT_PROG); \
-	 mv $(CLIENT_PROG).sh \
-		../../$(CLIENT_PROG)-$(PACKAGE_VERSION_SHORT)-macosx.sh)
+	(cd src; \
+	 cp reqrypt ../$(CLIENT_PROG)-$(PACKAGE_VERSION_SHORT)-macosx)
 
 client_install_windows: client_windows
 	(cd src; \
