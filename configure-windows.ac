@@ -1,5 +1,5 @@
 # configure-windows-cross.ac
-# (C) 2017, all rights reserved,
+# (C) 2018, all rights reserved,
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -65,8 +65,8 @@ AC_MSG_CHECKING([for $DIVERT_NAME files])
 
 if test -e $DIVERT/x86/${DIVERT_NAME}32.sys -a \
         -e $DIVERT/x86/$DIVERT_NAME.dll -a \
-        -e $DIVERT/amd64/${DIVERT_NAME}64.sys -a \
-        -e $DIVERT/amd64/$DIVERT_NAME.dll -a \
+        -e $DIVERT/x86_64/${DIVERT_NAME}64.sys -a \
+        -e $DIVERT/x86_64/$DIVERT_NAME.dll -a \
         -e $DIVERT/include/$DIVERT_WORD.h
 then
     AC_MSG_RESULT([yes])
@@ -85,11 +85,11 @@ fi
 case "$host" in
     amd64-*)
         AC_SUBST(BITS, 64)
-        AC_SUBST(ARCH, amd64)
+        AC_SUBST(ARCH, x86_64)
         ;;
     x86_64-*)
         AC_SUBST(BITS, 64)
-        AC_SUBST(ARCH, amd64)
+        AC_SUBST(ARCH, x86_64)
         ;;
     *)
         AC_SUBST(BITS, 32)

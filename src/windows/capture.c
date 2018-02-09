@@ -1,6 +1,6 @@
 /*
  * capture.c
- * (C) 2017, all rights reserved,
+ * (C) 2018, all rights reserved,
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -52,11 +52,11 @@ void init_capture(void)
 {
     handle = WinDivertOpen(
         "ip and "
-        "(outbound and (tcp.DstPort == 80 or"
-        " tcp.DstPort == 443 or "
-        " udp.DstPort == 53) or"
-        " inbound and icmp.Type == 11 and icmp.Code == 0) and "
-        "ip.DstAddr != 127.0.0.1",
+        "!loopback and "
+        "(outbound? tcp.DstPort == 80 or"
+        " tcp.DstPort == 443 or"
+        " udp.DstPort == 53 :"
+        " icmp.Type == 11 and icmp.Code == 0)",
         WINDIVERT_LAYER_NETWORK, -501, 0);
     if (handle == INVALID_HANDLE_VALUE)
     {
@@ -94,8 +94,8 @@ size_t get_packet(uint8_t *buff, size_t len)
     peth_header->pad2       = 0x0;
     peth_header->proto      = htons(ETH_P_IP);
 
-    WinDivertHelperCalcChecksums((PVOID)(buff+offset), (UINT)(len-offset),
-        WINDIVERT_HELPER_NO_REPLACE);
+    WinDivertHelperCalcChecksums((PVOID)(buff+offset), (UINT)read_len,
+        NULL, 0);
 
     return (size_t)(read_len+offset);
 }
@@ -112,9 +112,11 @@ void inject_packet(uint8_t *buff, size_t len)
     }
     struct pethhdr_s *peth_header = (struct pethhdr_s *)buff;
     WINDIVERT_ADDRESS addr;
+    memset(&addr, 0, sizeof(addr));
     addr.Direction = peth_header->direction;
     addr.IfIdx     = peth_header->if_idx;
     addr.SubIfIdx  = peth_header->sub_if_idx;
+    addr.Impostor  = 1;
 
     len -= offset;
     buff += offset;

@@ -1,5 +1,5 @@
 # configure.ac
-# (C) 2017, all rights reserved,
+# (C) 2018, all rights reserved,
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -45,7 +45,7 @@ case `uname -m` in
         ;;
     *)
         AC_SUBST(BITS, 64)
-        AC_SUBST(ARCH, amd64)
+        AC_SUBST(ARCH, x86_64)
         ;;
 esac
 

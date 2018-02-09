@@ -1,6 +1,6 @@
 #!/bin/sh
 # build.sh
-# (C) 2017, all rights reserved,
+# (C) 2018, all rights reserved,
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -43,7 +43,7 @@ make client_install32
 make server_install
 
 # Build Windows 64/32-bit
-DIVERT_VERSION=WinDivert-1.3.0-MINGW
+DIVERT_VERSION=WinDivert-1.4.0-rc-A-MINGW
 set +x
 if [ "$DIVERT" = "" ]
 then
