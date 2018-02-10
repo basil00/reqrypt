@@ -1,6 +1,6 @@
 /*
  * config.h
- * (C) 2017, all rights reserved,
+ * (C) 2018, all rights reserved,
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -109,6 +109,7 @@ struct config_s
     config_flag_t  hide_tcp_rst;    // Hide TCP packets with RST flag set?
     bool           hide_udp;        // Hide UDP packets?
     bool           tunnel;          // Tunnel packets?
+    bool           multi_route;     // Send TCP flows over multiple tunnels?
     config_split_t split;           // How to split data.
     config_ghost_t ghost;           // Send ghost packets?
     bool           ghost_check;     // Use a valid checksum for ghost packets?

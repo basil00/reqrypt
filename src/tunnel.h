@@ -1,6 +1,6 @@
 /*
  * tunnel.h
- * (C) 2017, all rights reserved,
+ * (C) 2018, all rights reserved,
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -38,7 +38,7 @@ void tunnel_file_write(void);
 bool tunnel_ready(void);
 void tunnel_open(void);
 bool tunnel_packets(uint8_t *packet, uint8_t **packets, uint64_t hash,
-    unsigned repeat, uint16_t config_mtu);
+    unsigned repeat, uint16_t config_mtu, bool config_multi);
 bool tunnel_active_html(http_buffer_t buff);
 bool tunnel_all_html(http_buffer_t buff);
 void tunnel_add(const char *url);

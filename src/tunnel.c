@@ -1,6 +1,6 @@
 /*
  * tunnel.c
- * (C) 2017, all rights reserved,
+ * (C) 2018, all rights reserved,
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -92,6 +92,7 @@ struct tunnel_history_s
 static mutex_t tunnels_lock;
 static struct tunnel_set_s tunnels_cache = TUNNEL_SET_INIT;
 static struct tunnel_set_s tunnels_active = TUNNEL_SET_INIT;
+static tunnel_flow_offset = 0;
 static random_state_t rng = NULL;
 
 /*
@@ -229,6 +230,7 @@ void tunnel_init(void)
     rng = random_init();
     http_register_callback("tunnels-active.html", tunnel_active_html);
     http_register_callback("tunnels-all.html", tunnel_all_html);
+    tunnel_flow_offset = random_uint64(rng);
 }
 
 /*
@@ -552,11 +554,36 @@ static bool tunnel_try_activate(tunnel_t tunnel)
 }
 
 /*
+ * TCP flow hash function.
+ */
+static uint64_t tunnel_flow_hash(uint32_t daddr, uint16_t dest,
+    uint16_t src)
+{
+    return (uint64_t)daddr * 3609501316222574897ull +
+           (uint64_t)dest * 14072897357666528627ull +
+           (uint64_t)src * 13265529554866849861ull +
+           tunnel_flow_offset;
+}
+
+/*
  * Tunnel a packet.
  */
 bool tunnel_packets(uint8_t *packet, uint8_t **packets, uint64_t hash,
-    unsigned repeat, uint16_t config_mtu)
+    unsigned repeat, uint16_t config_mtu, bool config_multi)
 {
+    if (!config_multi)
+    {
+        struct iphdr *ip_header = NULL;
+        struct tcphdr *tcp_header = NULL;
+        packet_init(packet, true, NULL, &ip_header, NULL, &tcp_header, NULL,
+            NULL, NULL, NULL);
+        if (ip_header != NULL && tcp_header != NULL)
+        {
+            hash = tunnel_flow_hash(ip_header->daddr, tcp_header->dest,
+                tcp_header->source);
+        }
+    }
+ 
     thread_lock(&tunnels_lock);
 
     // Select a tunnel for this packet:

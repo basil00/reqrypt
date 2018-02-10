@@ -1,6 +1,6 @@
 /*
  * client.c
- * (C) 2017, all rights reserved,
+ * (C) 2018, all rights reserved,
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -193,7 +193,7 @@ static void *worker_thread(void *arg)
         if (config.tunnel)
         {
             if (!tunnel_packets(packet, (uint8_t **)tunneled_packets,
-                packet_hash, packet_rep, config.mtu))
+                packet_hash, packet_rep, config.mtu, config.multi_route))
             {
                 continue;
             }
