@@ -39,7 +39,7 @@ rm -rf autom4te.cache cfg.mk config.log config.status configure
 autoconf
 ./configure
 make client_install
-make client_install32
+# make client_install32
 make server_install
 
 # Build Windows 64/32-bit

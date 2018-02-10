@@ -42,12 +42,14 @@ ctool:
 	 make -j 4 ctool)
 
 client_install: client
-	(cd src; \
-	 cp reqrypt ../$(CLIENT_PROG)-$(PACKAGE_VERSION_SHORT)-linux64)
+	(cd src/tools; \
+     ./build_clientdeb.sh $(PACKAGE_NAME) $(PACKAGE_VERSION_SHORT); \
+	 mv $(PACKAGE_NAME)_*.deb ../../)
 
 client_install32: client32
-	(cd src; \
-	 cp reqrypt ../$(CLIENT_PROG)-$(PACKAGE_VERSION_SHORT)-linux32)
+	(cd src/tools; \
+     ./build_clientdeb.sh $(PACKAGE_NAME) $(PACKAGE_VERSION_SHORT); \
+	 mv $(PACKAGE_NAME)_*.deb ../../)
 
 client_install_freebsd: client
 	(cd src; \
