@@ -23,8 +23,6 @@
 #include "log.h"
 #include "socket.h"
 
-#define UINT8   unsigned char
-#define UINT16  unsigned short
 #include "windivert.h"
 
 /*

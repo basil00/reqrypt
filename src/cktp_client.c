@@ -672,7 +672,7 @@ static bool cktp_reply_get_auth_handler(cktp_tunnel_t tunnel, uint8_t *reply,
     }
 
     struct cktp_stream_s stream;
-    struct cktp_msg_hdr_rep_s *rep_hdr;
+    struct cktp_msg_hdr_rep_s *rep_hdr __attribute__((__unused__));
     struct cktp_msg_bdy_rep_s *rep_bdy;
 
     cktp_stream_init(stream, reply_size, reply);
@@ -711,7 +711,7 @@ static bool cktp_reply_get_info_handler(cktp_tunnel_t tunnel, uint8_t *reply,
     }
 
     struct cktp_stream_s stream;
-    struct cktp_msg_hdr_rep_s *rep_hdr;
+    struct cktp_msg_hdr_rep_s *rep_hdr __attribute__((__unused__));
     struct cktp_msg_bdy_rep_s *rep_bdy;
 
     cktp_stream_init(stream, reply_size, reply);

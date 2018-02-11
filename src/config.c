@@ -172,12 +172,15 @@ struct http_pair_s frag_def[] =
  */
 static void load_config(struct http_user_vars_s *vars,
     struct config_s *config);
-static void write_config(struct config_s *config);
 static void read_config(struct config_s *config);
 static token_t expect_token(const char *filename, FILE *file, char *token,
     token_t expected, bool allow_eof);
 static const char *token_to_string(token_t token);
 static token_t read_token(FILE *file, char *token);
+
+#ifdef CLIENT
+static void write_config(struct config_s *config);
+#endif
 
 /*
  * Initialise a struct http_user_vars_s.
@@ -415,6 +418,7 @@ void config_get(struct config_s *config_copy)
     thread_unlock(&config_lock);
 }
 
+#ifdef CLIENT
 /*
  * Convert a Boolean into a string.
  */
@@ -439,7 +443,6 @@ static const char *enum_to_string(config_enum_t e, struct http_pair_s *def,
     panic("undefined enum value 0x%X", e);
 }
 
-#ifdef CLIENT
 /*
  * Call-back from the configuration server; save the configuration state.
  */
@@ -730,20 +733,17 @@ static void read_config(struct config_s *config)
     http_user_vars_init(&vars);
     char var[MAX_TOKEN_LENGTH+1];
     char val[MAX_TOKEN_LENGTH+1];
-    bool success = false;
     while (true)
     {
         token_t t = expect_token(filename, file, var, TOKEN_VAR, true);
         if (t == TOKEN_END)
         {
-            success = true;
             break;
         }
         if (t != TOKEN_VAR ||
             TOKEN_EQ != expect_token(filename, file, NULL, TOKEN_EQ, false) ||
             TOKEN_VAL != expect_token(filename, file, val, TOKEN_VAL, false))
         {
-            success = false;
             break;
         }
         http_user_var_insert(&vars, var, val);

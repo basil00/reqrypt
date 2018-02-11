@@ -28,6 +28,7 @@
 #include "http_server.h"
 #include "log.h"
 #include "misc.h"
+#include "packet.h"
 #include "random.h"
 #include "socket.h"
 #include "thread.h"
@@ -92,7 +93,7 @@ struct tunnel_history_s
 static mutex_t tunnels_lock;
 static struct tunnel_set_s tunnels_cache = TUNNEL_SET_INIT;
 static struct tunnel_set_s tunnels_active = TUNNEL_SET_INIT;
-static tunnel_flow_offset = 0;
+static uint64_t tunnel_flow_offset = 0;
 static random_state_t rng = NULL;
 
 /*

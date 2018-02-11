@@ -181,9 +181,4 @@ typedef SOCKET socket_t;
 #define IPV6_V6ONLY             27
 #endif
 
-/*
- * Unsupported errno values:
- */
-#define ETIMEDOUT           0
-
 #endif      /* __SOCKET_H */

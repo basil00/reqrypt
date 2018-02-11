@@ -382,7 +382,7 @@ bool tls_sni_match(uint8_t *packet, size_t *start, size_t *end)
     uint8_t *data;
     ssize_t data_len;
     packet_init(packet, false, NULL, NULL, NULL, NULL, NULL, &data, NULL,
-        &data_len);
+        (size_t *)&data_len);
     if (data == NULL)
     {
         return false;
@@ -430,9 +430,9 @@ bool tls_sni_match(uint8_t *packet, size_t *start, size_t *end)
     {
         return false;
     }
-    len16 = (len8 + 1 + *len8);
+    len16 = (uint16_t *)(len8 + 1 + *len8);
     data_len -= sizeof(uint16_t);
-    struct extension_s *extension = (struct extension *)(len16 + 1);
+    struct extension_s *extension = (struct extension_s *)(len16 + 1);
     while (data_len > sizeof(struct extension_s))
     {
         if (extension->type == htons(0x0000))

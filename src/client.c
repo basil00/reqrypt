@@ -220,7 +220,7 @@ static void allow_packets(bool log, struct ethhdr **packets)
         struct iphdr *ip_header = (struct iphdr *)(packets[i] + 1);
         size_t tot_len = sizeof(struct ethhdr) + ntohs(ip_header->tot_len);
         if (log)
-            log_packet(ip_header);
+            log_packet((uint8_t *)ip_header);
         inject_packet((uint8_t *)packets[i], tot_len);
     }
 }
