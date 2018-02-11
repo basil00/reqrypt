@@ -2,8 +2,9 @@
 <html>
 <head>
  $INCLUDE(head.html)
+ <script src="tunnels.js" rel="text/javascript"></script>
 </head>
-<body class="style" onLoad="doLoad()">
+<body class="style" onLoad="doLoad(); getTunnels()">
 <div class="wrap">
  $INCLUDE(title.html)
  $INCLUDE(tabs.html)
@@ -11,7 +12,30 @@
   $INCLUDE(exit.html)
   <form name="options">
   <small>
-   BASIC:
+   TUNNELS:
+  </small>
+  <select id="tunnels_all_select" size="9" class="url_select"
+          onChange="selectAllTunnel()">
+  </select>
+  <br>
+  <p></p>
+  <div class="option">
+   <div class="label">
+    Manage Tunnels?
+   </div>
+   <div class="input">
+    <input id="tunnel" type="text" size="50">
+    <input title="Open the tunnel."
+           type="button" value="Open" onMouseUp="openTunnel()">
+    <input title="Close the tunnel."
+           type="button" value="Close" onMouseUp="closeTunnel()">
+    <input title="Delete the tunnel."
+           type="button" value="Delete" onMouseUp="delTunnel()">
+   </div>
+  </div>
+  <br>
+  <small>
+   BASIC CONFIG:
   </small>
   <div class="option">
    <div class="label">
@@ -72,7 +96,7 @@
   </div>
   <br>
   <small>
-   ADVANCED:
+   ADVANCED CONFIG:
   </small>
   <div class="option">
    <div class="label">
@@ -169,6 +193,17 @@
       Transport Layer
      </option>
     </select>
+   </div>
+  </div>
+  <div class="option">
+   <div class="label">
+    Multi-route enabled?
+   </div>
+   <div class="input">
+    <input title="Enable multi-route." type="radio" name="multi_route"
+           value="true" onChange="doSubmit()"> Yes
+    <input title="Disable multi-route." type="radio" name="multi_route"
+           value="false" onChange="doSubmit()"> No
    </div>
   </div>
   </form>

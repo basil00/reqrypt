@@ -41,7 +41,8 @@ bool tunnel_packets(uint8_t *packet, uint8_t **packets, uint64_t hash,
     unsigned repeat, uint16_t config_mtu, bool config_multi);
 bool tunnel_active_html(http_buffer_t buff);
 bool tunnel_all_html(http_buffer_t buff);
-void tunnel_add(const char *url);
-void tunnel_delete(const char *url);
+void tunnel_open_url(const char *url);
+void tunnel_close_url(const char *url);
+void tunnel_delete_url(const char *url);
 
 #endif      /* __TUNNEL_H */

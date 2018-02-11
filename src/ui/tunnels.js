@@ -51,15 +51,6 @@ function getTunnels()
     request.open("GET", url, true);
     request.onreadystatechange = updateAllTunnels;
     request.send(null);
-    setTimeout("getTunnels2()", 50);
-}
-
-function getTunnels2()
-{
-    url = "tunnels-active.html";
-    request.open("GET", url, true);
-    request.onreadystatechange = updateActiveTunnels;
-    request.send(null);
     setTimeout("getTunnels()", 2000);
 }
 
@@ -76,60 +67,12 @@ function updateAllTunnels()
     }
 }
 
-function updateActiveTunnels()
-{
-    if (request.readyState == 4 && request.status == 200)
-    {
-        tunnels_select = document.getElementById("tunnels_select");
-        if (tunnels_select)
-        {
-            tunnels_select.innerHTML = request.responseText;
-            reselectTunnel();
-        }
-    }
-}
-
-function selectActiveTunnel()
-{
-    tunnels_select = document.getElementById("tunnels_select");
-    tunnels_all_select = document.getElementById("tunnels_all_select");
-    tunnel = document.getElementById("tunnel");
-    if (tunnels_select && tunnels_all_select && tunnel)
-    {
-        for (i = 0; i < tunnels_all_select.length; i++)
-        {
-            if (tunnels_all_select[i].selected)
-            {
-                tunnels_all_select[i].selected = false;
-                break;
-            }
-        }
-        for (i = 0; i < tunnels_select.length; i++)
-        {
-            if (tunnels_select[i].selected)
-            {
-                tunnel.value = tunnels_select[i].value;
-                return;
-            }
-        }
-    }
-}
-
 function selectAllTunnel()
 {
-    tunnels_select = document.getElementById("tunnels_select");
     tunnels_all_select = document.getElementById("tunnels_all_select");
     tunnel = document.getElementById("tunnel");
-    if (tunnels_select && tunnels_all_select && tunnel)
+    if (tunnels_all_select && tunnel)
     {
-        for (i = 0; i < tunnels_select.length; i++)
-        {
-            if (tunnels_select[i].selected)
-            {
-                tunnels_select[i].selected = false;
-                break;
-            }
-        }
         for (i = 0; i < tunnels_all_select.length; i++)
         {
             if (tunnels_all_select[i].selected)
@@ -149,38 +92,38 @@ function reselectTunnel()
     {
         return;
     }
-    tunnels_select = document.getElementById("tunnels_select");
     tunnels_all_select = document.getElementById("tunnels_all_select");
-    if (tunnels_select && tunnels_all_select)
+    if (tunnels_all_select)
     {
-        for (i = 0; i < tunnels_select.length; i++)
-        {
-            if (tunnels_select[i].value == tunnel.value)
-            {
-                tunnels_select[i].selected = true;
-                return;
-            }
-        }
         for (i = 0; i < tunnels_all_select.length; i++)
         {
             if (tunnels_all_select[i].value == tunnel.value)
             {
-                tunnels_all_select[i].selected = true;
+                tunnels_all_select[i].selected = "selected";
                 return;
             }
         }
     }
 }
 
-function addTunnel()
+function openTunnel()
 {
-    document.state.ADD_URL.value = document.tunnels.tunnel.value;
+    document.state.OPEN_URL.value = document.options.tunnel.value;
+    document.options.tunnel.value = "";
+    doSubmit();
+}
+
+function closeTunnel()
+{
+    document.state.CLOSE_URL.value = document.options.tunnel.value;
+    document.options.tunnel.value = "";
     doSubmit();
 }
 
 function delTunnel()
 {
-    document.state.DEL_URL.value = document.tunnels.tunnel.value;
+    document.state.DEL_URL.value = document.options.tunnel.value;
+    document.options.tunnel.value = "";
     doSubmit();
 }
 

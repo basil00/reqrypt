@@ -63,7 +63,8 @@
 #define VAR_UDP_PROTO           "UDP_PROTO"
 #define VAR_MTU                 "MTU"
 #define VAR_LAUNCH_UI           "LAUNCH_UI"
-#define VAR_ADD_URL             "ADD_URL"
+#define VAR_OPEN_URL            "OPEN_URL"
+#define VAR_CLOSE_URL           "CLOSE_URL"
 #define VAR_DEL_URL             "DEL_URL"
 
 #define VAR_THREADS             "THREADS"
@@ -523,16 +524,20 @@ void config_callback(struct http_user_vars_s *vars)
         // Save the new configuration to disk.
         write_config(&config_temp);
 
-        // Handle add/del of tunnel URLs
+        // Handle open/close/del of tunnel URLs
         const char *url;
-        if (http_get_string_var(vars, VAR_ADD_URL, &url) && url[0] != '\0')
+        if (http_get_string_var(vars, VAR_OPEN_URL, &url) && url[0] != '\0')
         {
-            tunnel_add(url);
+            tunnel_open_url(url);
+        }
+        if (http_get_string_var(vars, VAR_CLOSE_URL, &url) && url[0] != '\0')
+        {
+            tunnel_close_url(url);
         }
         else if (http_get_string_var(vars, VAR_DEL_URL, &url) &&
                     url[0] != '\0')
         {
-            tunnel_delete(url);
+            tunnel_delete_url(url);
         }
     }
 }

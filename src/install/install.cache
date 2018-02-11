@@ -1,15 +1,8 @@
 # Installed tunnel cache
 # AUTOMATICALLY GENERATED, DO NOT EDIT
 
-# AGE = 16
-udp://191.101.180.77:31111?crypt=cipher.aes,cert.JnWvfd1nOJEA55p6uJNuRF,sec.2888 16
-
-# AGE = 16
-udp://191.101.180.77:29989?crypt=cipher.xxtea,cert.a5p7i0RZlcs8y58ersfl75,sec.2888 16
-
-# AGE = 16
-udp://tunnel.reqrypt.org:31111?crypt=cipher.aes,cert.JnWvfd1nOJEA55p6uJNuRF,sec.2888 16
-
-# AGE = 16
-udp://tunnel.reqrypt.org:29989?crypt=cipher.xxtea,cert.a5p7i0RZlcs8y58ersfl75,sec.2888 16
+udp://191.101.180.77:31111?crypt=cipher.aes,cert.JnWvfd1nOJEA55p6uJNuRF,sec.2888 16 1
+udp://191.101.180.77:29989?crypt=cipher.xxtea,cert.a5p7i0RZlcs8y58ersfl75,sec.2888 16 1
+udp://tunnel.reqrypt.org:31111?crypt=cipher.aes,cert.JnWvfd1nOJEA55p6uJNuRF,sec.2888 16 1
+udp://tunnel.reqrypt.org:29989?crypt=cipher.xxtea,cert.a5p7i0RZlcs8y58ersfl75,sec.2888 16 1
 

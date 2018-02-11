@@ -26,7 +26,7 @@ a.browser
 
 div.wrap
 {
-    width: 800px;
+    width: 1000px;
     height: 1200px;
     margin: 1em auto 1em auto;
 }
@@ -75,6 +75,7 @@ div.main
     padding: 1em;
     position: relative;
     z-index: 11;
+    min-height: 500px;
 }
 
 div.exit
@@ -179,7 +180,7 @@ select.input
 
 select.url_select
 {
-    background-color: #ddddff;
+    background-color: #ffffff;
     width: 100%;
     overflow: auto;
 }

@@ -57,6 +57,7 @@ struct tunnel_s
     cktp_tunnel_t    tunnel;            // Underlying CKTP tunnel
     state_t          state;             // Tunnel's state
     bool             reconnect;         // True if we are reconnecting
+    bool             enabled;           // True if tunnel can be opened
     uint16_t         id;                // Tunnel's ID
     uint8_t          age;               // Tunnel's age
     double           weight;            // Tunnel's weight
@@ -104,7 +105,7 @@ static void tunnel_set_insert(tunnel_set_t tunnel_set, tunnel_t tunnel);
 static tunnel_t tunnel_set_replace(tunnel_set_t tunnel_set, tunnel_t tunnel);
 static tunnel_t tunnel_set_delete(tunnel_set_t tunnel_set, const char *url);
 static int tunnel_set_lookup(tunnel_set_t tunnel_set, const char *url);
-static tunnel_t tunnel_create(const char *url, uint8_t age);
+static tunnel_t tunnel_create(const char *url, uint8_t age, bool enabled);
 static void tunnel_free(tunnel_t tunnel);
 static void *tunnel_activate_manager(void *unused);
 static void *tunnel_activate(void *tunnel_ptr);
@@ -121,7 +122,15 @@ static bool tunnel_html(http_buffer_t buff, tunnel_set_t tunnel_set)
     thread_lock(&tunnels_lock);
     for (size_t i = 0; i < tunnel_set->length; i++)
     {
-        http_buffer_puts(buff, "<option value=\"");
+        http_buffer_puts(buff, "<option style=\"background-color: ");
+        http_buffer_puts(buff,
+            (tunnel_set->tunnels[i]->state == TUNNEL_STATE_OPEN?
+               "#ddffdd": "#ffdddd"));
+        http_buffer_puts(buff, "\" title=\"Tunnel is ");
+        http_buffer_puts(buff,
+            (tunnel_set->tunnels[i]->state == TUNNEL_STATE_OPEN?
+               "open and in use": "closed"));
+        http_buffer_puts(buff, ".\" value=\"");
         http_buffer_puts(buff, tunnel_set->tunnels[i]->url);
         http_buffer_puts(buff, "\">");
         http_buffer_puts(buff, tunnel_set->tunnels[i]->url);
@@ -307,6 +316,13 @@ void tunnel_file_read(void)
                 url, filename);
             break;
         }
+        unsigned enabled;
+        if (fscanf(file, "%u", &enabled) != 1 || enabled > 1)
+        {
+            warning("unable to read enaled status for tunnel %s from file "
+                "\"%s\"", url, filename);
+            break;
+        }
         if (getc(file) != '\n')
         {
             warning("unable to read tunnel %s file from file \"%s\"; "
@@ -314,7 +330,7 @@ void tunnel_file_read(void)
             break;
         }
 
-        tunnel_t tunnel = tunnel_create(url, (uint8_t)age);
+        tunnel_t tunnel = tunnel_create(url, (uint8_t)age, (enabled != 0));
         thread_lock(&tunnels_lock);
         tunnel_set_insert(&tunnels_cache, tunnel);
         thread_unlock(&tunnels_lock);
@@ -352,8 +368,10 @@ void tunnel_file_write(void)
         tunnel_t tunnel = tunnels_cache.tunnels[i];
         if (tunnel->age != 0)
         {
-            fprintf(file, "# AGE = %u\n", tunnel->age);
-            fprintf(file, "%s %u\n\n", tunnel->url, tunnel->age);
+            fprintf(file, "# AGE = %u, ENABLED = %s\n", tunnel->age,
+                (tunnel->enabled? "true": "false"));
+            fprintf(file, "%s %u %u\n\n", tunnel->url, tunnel->age,
+                tunnel->enabled);
         }
     }
     fclose(file);
@@ -372,7 +390,7 @@ void tunnel_file_write(void)
 /*
  * Initialise a tunnel.
  */
-static tunnel_t tunnel_create(const char *url, uint8_t age)
+static tunnel_t tunnel_create(const char *url, uint8_t age, bool enabled)
 {
     tunnel_t tunnel = (tunnel_t)malloc(sizeof(struct tunnel_s));
     if (tunnel == NULL)
@@ -385,6 +403,7 @@ static tunnel_t tunnel_create(const char *url, uint8_t age)
     tunnel->tunnel    = NULL;
     tunnel->age       = age;
     tunnel->state     = TUNNEL_STATE_CLOSED;
+    tunnel->enabled   = enabled;
     tunnel->reconnect = false;
     tunnel->id        = id++;
     tunnel->weight    = 1.0;
@@ -451,7 +470,7 @@ static void *tunnel_activate_manager(void *unused)
         for (size_t i = 0; j < max && i < tunnels_cache.length; i++)
         {
             tunnel_t tunnel = tunnels_cache.tunnels[i];
-            if (tunnel->state == TUNNEL_STATE_CLOSED)
+            if (tunnel->enabled && tunnel->state == TUNNEL_STATE_CLOSED)
             {
                 j++;
                 tunnel->state = TUNNEL_STATE_OPENING;
@@ -709,9 +728,9 @@ static tunnel_t tunnel_get(uint64_t hash, unsigned repeat)
 }
 
 /*
- * Add a tunnel.
+ * Open a tunnel URL.
  */
-void tunnel_add(const char *url)
+void tunnel_open_url(const char *url)
 {
     // First check if the URL is syntactically valid:
     if (!cktp_parse_url(url, NULL, NULL, NULL, NULL))
@@ -724,24 +743,25 @@ void tunnel_add(const char *url)
     tunnel_t tunnel;
     if (idx < 0)
     {
-        tunnel = tunnel_create(url, TUNNEL_INIT_AGE);
+        tunnel = tunnel_create(url, TUNNEL_INIT_AGE, true);
         tunnel_set_insert(&tunnels_cache, tunnel);
     }
     else
     {
         tunnel = tunnels_cache.tunnels[idx];
+        tunnel->enabled = true;
         if (tunnel->state == TUNNEL_STATE_OPEN ||
             tunnel->state == TUNNEL_STATE_OPENING)
         {
             thread_unlock(&tunnels_lock);
-            warning("unable to add tunnel %s; tunnel is already open or "
+            warning("unable to open tunnel %s; tunnel is already open or "
                 "opening", url);
             return;
         }
     }
     tunnel->state = TUNNEL_STATE_OPENING;
     thread_unlock(&tunnels_lock);
-    log("added tunnel %s", url);
+    log("opened tunnel %s", url);
     thread_t thread;
     thread_create(&thread, tunnel_activate, (void *)tunnel);
 
@@ -749,49 +769,48 @@ void tunnel_add(const char *url)
 }
 
 /*
- * Delete a tunnel.
+ * Close a tunnel URL.
  */
-void tunnel_delete(const char *url)
+void tunnel_close_url(const char *url)
 {
     thread_lock(&tunnels_lock);
     tunnel_t tunnel = tunnel_set_delete(&tunnels_active, url);
-    if (tunnel == NULL)
+    if (tunnel != NULL)
     {
-        tunnel = tunnel_set_delete(&tunnels_cache, url);
-        if (tunnel != NULL)
-        {
-            tunnel_free(tunnel);
-            log("deleted tunnel %s", url);
-        }
-        else
-        {
-            warning("unable to delete tunnel %s; tunnel does not exist",
-                url);
-        }
-    }
-    else
-    {
-        // XXX: isn't (tunnel->state == TUNNEL_STATE_OPEN) an invariant for
-        //      all of tunnels_active (???)
-        switch (tunnel->state)
-        {
-            case TUNNEL_STATE_OPENING:
-                tunnel->state = TUNNEL_STATE_CLOSING;
-                break;
-            case TUNNEL_STATE_CLOSING:
-                break;
-            case TUNNEL_STATE_OPEN:
-                cktp_close_tunnel(tunnel->tunnel);
-                tunnel->tunnel = NULL;
-                tunnel->state = TUNNEL_STATE_CLOSED;
-                break;
-            default:
-                panic("unexpected tunnel state %u", tunnel->state);
-        }
-        log("deactivated tunnel %s", url);
+        cktp_close_tunnel(tunnel->tunnel);
+        tunnel->tunnel = NULL;
+        tunnel->enabled = false;
+        tunnel->state = TUNNEL_STATE_CLOSED;
     }
     thread_unlock(&tunnels_lock);
 
+    log("closed tunnel %s", url);
+    tunnel_file_write();
+}
+
+/*
+ * Delete a tunnel URL.
+ */
+void tunnel_delete_url(const char *url)
+{
+    thread_lock(&tunnels_lock);
+    tunnel_t tunnel = tunnel_set_delete(&tunnels_active, url);
+    if (tunnel != NULL)
+    {
+        cktp_close_tunnel(tunnel->tunnel);
+        tunnel->tunnel = NULL;
+        tunnel->enabled = false;
+        tunnel->state = TUNNEL_STATE_CLOSED;
+    }
+    tunnel = tunnel_set_delete(&tunnels_cache, url);
+    if (tunnel != NULL)
+    {
+        tunnel_free(tunnel);
+    }
+            
+    thread_unlock(&tunnels_lock);
+
+    log("deleted tunnel %s", url);
     tunnel_file_write();
 }
 
@@ -842,7 +861,7 @@ static void *tunnel_reconnect(void *url_ptr)
     // old instance.
 
     char *url = (char *)url_ptr;
-    tunnel_t tunnel = tunnel_create(url, TUNNEL_INIT_AGE);
+    tunnel_t tunnel = tunnel_create(url, TUNNEL_INIT_AGE, true);
     free(url);
 
     tunnel->state = TUNNEL_STATE_OPENING;

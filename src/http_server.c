@@ -1,6 +1,6 @@
 /*
  * http_server.c
- * (C) 2017, all rights reserved,
+ * (C) 2018, all rights reserved,
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -61,6 +61,7 @@
 #define HTTP_TYPE_JAVASCRIPT    2
 #define HTTP_TYPE_TEXT          3
 #define HTTP_TYPE_SVG           4
+#define HTTP_TYPE_ICON          5
 
 /*
  * Include the static content.
@@ -744,6 +745,8 @@ bool http_send_response(socket_t s, unsigned http_code,
         case HTTP_TYPE_SVG:
             http_content_type = "image/svg+xml";
             break;
+        case HTTP_TYPE_ICON:
+            http_content_type = "image/x-icon";
     }
     http_buffer_t buff;
     if (type == HTTP_TYPE_HTML || type == HTTP_TYPE_JAVASCRIPT)
@@ -823,6 +826,10 @@ int http_type(const char *name)
     if (strcmp(name+i, ".svg") == 0)
     {
         return HTTP_TYPE_SVG;
+    }
+    if (strcmp(name+i, ".ico") == 0)
+    {
+        return HTTP_TYPE_ICON;
     }
     return HTTP_TYPE_HTML;
 }
