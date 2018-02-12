@@ -33,7 +33,7 @@ div.wrap
 
 div.tabs
 {
-    padding: 0 0 0 1em;
+    padding: 0 1em 0 1em;
 }
 
 a
@@ -68,6 +68,17 @@ a.tab.active, a.tab.active:hover
     z-index: 12;
 }
 
+a.exit
+{
+    background-color: #7777ee;
+    float: right;
+}
+
+a.exit:hover
+{
+    background-color: #9999ff;
+}
+
 div.main
 {
     color: #ffffff;
@@ -76,25 +87,6 @@ div.main
     position: relative;
     z-index: 11;
     min-height: 500px;
-}
-
-div.exit
-{
-    position: relative;
-    float: right;
-    font-size: 65%;
-    top: -1em;
-}
-
-a.exit:hover
-{
-    background-color: #9999ff;
-}
-
-a.exit
-{
-    color: #ffffff;
-    text-decoration: none;
 }
 
 iframe.log
@@ -180,9 +172,9 @@ select.input
 
 select.url_select
 {
-    background-color: #ffffff;
     width: 100%;
     overflow: auto;
+    margin-bottom: 5px;
 }
 
 textarea.license

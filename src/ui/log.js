@@ -51,7 +51,7 @@ function getLog()
     request.open("GET", url, true);
     request.onreadystatechange = updateLog;
     request.send(null);
-    setTimeout("getLog()", 500);
+    setTimeout("getLog()", 750);
 }
 
 function updateLog()

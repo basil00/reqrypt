@@ -9,7 +9,6 @@
  $INCLUDE(title.html)
  $INCLUDE(tabs.html)
  <div class="main" id="options">
-  $INCLUDE(exit.html)
   <form name="options">
   <small>
    TUNNELS:
@@ -18,7 +17,6 @@
           onChange="selectAllTunnel()">
   </select>
   <br>
-  <p></p>
   <div class="option">
    <div class="label">
     Manage Tunnels?
@@ -39,7 +37,7 @@
   </small>
   <div class="option">
    <div class="label">
-    <i>$PROGRAM</i> enabled?
+    $PROGRAM enabled?
    </div>
    <div class="input">
     <input title="Enable filter circumvention." type="radio" name="enabled"

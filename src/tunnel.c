@@ -122,14 +122,15 @@ static bool tunnel_html(http_buffer_t buff, tunnel_set_t tunnel_set)
     thread_lock(&tunnels_lock);
     for (size_t i = 0; i < tunnel_set->length; i++)
     {
+        tunnel_t tunnel = tunnel_set->tunnels[i];;
         http_buffer_puts(buff, "<option style=\"background-color: ");
         http_buffer_puts(buff,
-            (tunnel_set->tunnels[i]->state == TUNNEL_STATE_OPEN?
-               "#ddffdd": "#ffdddd"));
-        http_buffer_puts(buff, "\" title=\"Tunnel is ");
+            (tunnel->state == TUNNEL_STATE_OPEN?  "#ddffdd": "#ffdddd"));
+        http_buffer_puts(buff, "\" title=\"Tunnel ");
+        http_buffer_puts(buff, tunnel->url);
+        http_buffer_puts(buff, " is ");
         http_buffer_puts(buff,
-            (tunnel_set->tunnels[i]->state == TUNNEL_STATE_OPEN?
-               "open and in use": "closed"));
+            (tunnel->state == TUNNEL_STATE_OPEN? "open and in use": "closed"));
         http_buffer_puts(buff, ".\" value=\"");
         http_buffer_puts(buff, tunnel_set->tunnels[i]->url);
         http_buffer_puts(buff, "\">");
