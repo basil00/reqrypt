@@ -124,8 +124,18 @@ static bool tunnel_html(http_buffer_t buff, tunnel_set_t tunnel_set)
     {
         tunnel_t tunnel = tunnel_set->tunnels[i];;
         http_buffer_puts(buff, "<option style=\"background-color: ");
-        http_buffer_puts(buff,
-            (tunnel->state == TUNNEL_STATE_OPEN?  "#ddffdd": "#ffdddd"));
+        switch (tunnel->state)
+        {
+            case TUNNEL_STATE_OPEN:
+                http_buffer_puts(buff, "#ddffdd");
+                break;
+            case TUNNEL_STATE_CLOSED:
+                http_buffer_puts(buff, "#ffdddd");
+                break;
+            default:
+                http_buffer_puts(buff, "#ffffdd");
+                break;
+        }
         http_buffer_puts(buff, "\" title=\"Tunnel ");
         http_buffer_puts(buff, tunnel->url);
         http_buffer_puts(buff, " is ");

@@ -51,7 +51,7 @@ function getTunnels()
     request.open("GET", url, true);
     request.onreadystatechange = updateAllTunnels;
     request.send(null);
-    setTimeout("getTunnels()", 2000);
+    setTimeout("getTunnels()", 1000);
 }
 
 function updateAllTunnels()
