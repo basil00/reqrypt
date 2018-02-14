@@ -36,6 +36,13 @@ div.tabs
     padding: 0 1em 0 1em;
 }
 
+div.help
+{
+    color: #000000;
+    background-color: #ffffff;
+    padding: 10px 10px 10px 10px;
+}
+
 a
 {
     text-decoration: none;

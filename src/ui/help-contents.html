@@ -1,12 +1,6 @@
-<!doctype html>
-<html>
-<head>
- <link href="style.css" rel="stylesheet" type="text/css">
-</head>
-<body bgcolor="#ffffff">
 <div class="help">
- <h1>$PROGRAM</h1>
- <h2>Table of Contents</h2>
+ <h1>$PROGRAM Help</h1>
+ <h2>Contents</h2>
  <ul>
   <li><a href="#gen_info">General Information</a>
    <ul>
@@ -19,29 +13,29 @@
     <li><a href="#how_really">How does $PROGRAM really work?</a>
     <li><a href="#anon">Does $PROGRAM allow me to browse anonymously?</a>
    </ul>
+  <li><a href="#options">$PROGRAM Tab</a>
+   <ul>
+    <li><a href="#what_manage">Manage Tunnels</a>
+    <li><a href="#what_enabled">$PROGRAM enabled</a>
+    <li><a href="#what_hide">Hiding mode</a>
+    <li><a href="#what_autolaunch">Auto-Launch WebUI</a>
+    <li><a href="#what_dns">DNS Hiding</a>
+    <li><a href="#what_nat">Use NAT Traversal</a>
+    <li><a href="#what_nat_meth">NAT traversal method</a>
+    <li><a href="#what_hops">Ghost packet hops</a>
+    <li><a href="#what_split">Packet splitting method</a>
+    <li><a href="#what_multi">Multi-route Enabled</a>
+   </ul>
   <li><a href="#log">Log Tab</a>
    <ul>
-    <li><a href="#what_log">What are the log messages?</a>
-    <li><a href="#what_disp">What is "Display messages"?</a>
+    <li><a href="#what_log">Log messages</a>
+    <li><a href="#what_disp">Display Messages</a>
    </ul>
-  <li><a href="#options">Options Tab</a>
-   <ul>
-    <li><a href="#what_enabled">What is "$PROGRAM enabled"?</a>
-    <li><a href="#what_hide">What is "Hiding mode"?</a>
-    <li><a href="#what_autolaunch">What is "Auto-Launch WebUI"?</a>
-    <li><a href="#what_dns">What is "DNS Hiding"?</a>
-    <li><a href="#what_nat">What is "Use NAT Traversal"?</a>
-    <li><a href="#what_nat_meth">What is "NAT traversal method"?</a>
-    <li><a href="#what_hops">What is "Ghost packet hops"?</a>
-    <li><a href="#what_split">What is "Packet splitting method"?</a>
-   </ul>
-  <li><a href="#tunnels">Tunnels Tab</a>
+  <li><a href="#tunnels">Tunnels</a>
    <ul>
     <li><a href="#what_url">What is a tunnel URL?</a>
     <li><a href="#what_crypt">What is the crypt encoding?</a>
     <li><a href="#what_pad">What is the pad encoding?</a>
-    <li><a href="#what_open">What are the "OPEN" and "AVAILABLE" tunnels?</a>
-    <li><a href="#what_add">What is "Add/Remove tunnels"?</a>
    </ul>
  </ul>
  <hr>
@@ -158,9 +152,210 @@
  </div>
 
  <hr>
+ <a name="options"><h2>$PROGRAM Tab</h2></a>
+ <div class="question">
+  <a name="what_manage">Manage Tunnels</a>
+ </div>
+ <div class="answer">
+  <p>
+   The <i>Manage Tunnels</i> control allows the user to open/close/delete
+   tunnel URLs.
+   Open tunnels are displayed in green, and closed tunnels in red.
+  </p>
+ </div>
+
+ <div class="question">
+  <a name="what_enabled">$PROGRAM enabled</a>
+ </div>
+ <div class="answer">
+  <p>
+   The <i>$PROGRAM enabled</i> control determines whether $PROGRAM is enabled
+   or not.
+   When disabled, $PROGRAM offers no protection against ISP-level censorship
+   systems.
+  </p>
+ </div>
+
+ <div class="question">
+  <a name="what_hide">Hiding Mode</a>
+ </div>
+ <div class="answer">
+  <p>
+   The <i>Hiding Mode</i> control determines how outbound packets are tunneled
+   or split.
+   The options are:
+   <ol>
+    <li> <b>Off</b>: Do not tunnel/split any traffic.
+    <li> <b>Passive (Split Only)</b>: Split outbound packets such that no
+          single fragment contains a complete URL.
+          This mode is effective against some ISP-level censorship technologies.
+    <li> <b>Active-Low (Tunnel Partial URL)</b>: Similar to the above but
+          tunnels one of the fragments containing URL data.
+    <li> <b>Active-Medium (Tunnel Full URL)</b>: Similar to the above but
+          tunnels a fragment containing the full URL.
+    <li> <b>Active-High (Tunnel Data)</b>: Tunnels packets that contain data.
+         TCP control packets such as SYNs, ACKs, etc., are not tunneled.
+    <li> <b>Active-Highest (Tunnel Everything)</b>: Tunnel all outbound
+         packets.
+   </ol>
+  </p>
+  <p>
+   <b><i>NOTE:</i></b> Whether or not an option is effective depends on the
+   ISP-level censorship technology you wish to bypass.
+   In a nutshell, the "<i>Active-Highest (Tunnel Everything)</i>" is the most
+   conservative mode and is most likely to be effective.
+   However, this mode is also the slowest because it tunnels the most packets.
+   The "<i>Passive (Split Only)</i>" mode is the fastest but is
+   only effective against specific inspection/logging systems that 
+   (incorrectly) assume URL data will be contained within single packets.
+   It is recommended you choose the least conservative mode that works.
+  </p>
+ </div>
+
+ <div class="question">
+  <a name="what_autolaunch">Auto-Launch WebUI</a>
+ </div>
+ <div class="answer">
+  <p>
+   The <i>Auto-Launch WebUI</i> control determines whether the $PROGRAM web UI
+   is automatically launched on startup or not.
+  </p>
+ </div>
+
+ <div class="question">
+  <a name="what_dns">DNS Hiding</a>
+ </div>
+ <div class="answer">
+  <p>
+   The <i>DNS Hiding</i> control determines whether DNS requests are tunneled
+   or not (in addition to tunneling HTTP(S) requests).
+   This may be useful against ISP-level censorship systems that use
+   <a href="http://en.wikipedia.org/wiki/DNS_cache_poisoning">DNS Cache
+   Poisoning</a>.
+   To use this option, you must first configure your operating system to use an
+   <i>external</i> DNS server such as
+   <a href="http://code.google.com/speed/public-dns/">Google public DNS</a>
+   or
+   <a href="http://www.opendns.com/">OpenDNS</a>.
+   Do <b>NOT</b> use the DNS provided by your ISP.
+  </p>
+ </div>
+
+ <div class="question">
+  <a name="what_nat">Use NAT Traversal</a>
+ </div>
+ <div class="answer">
+  <p>
+   Most home router/modems use
+   <a href="http://en.wikipedia.org/wiki/Network_address_translation">
+   Network Address Translation</a> (NAT) to allow multiple computers to share
+   a single broadband connection.
+   Because $PROGRAM tunnels TCP packets, a
+   <a href="http://en.wikipedia.org/wiki/NAT_traversal">NAT traversal</a>
+   method is required.
+   The options are:
+   <ul>
+    <li> <b>Never</b>: Never use NAT traversal.
+    <li> <b>Automatic</b>: Use NAT traversal only if a NAT is detected.
+         NAT detection works by checking whether your computer's IP address is 
+         private or public.
+         A private address indicates that your computer is behind a NAT.
+    <li> <b>Always</b>: Always use NAT traversal.
+   </ul>
+  </p>
+ </div>
+
+ <div class="question">
+  <a name="what_nat_meth">NAT Traversal Method</a>
+ </div>
+ <div class="answer">
+  <p>
+   The <i>NAT Traversal Method</i> control determines how $PROGRAM should
+   traverse the NAT (if present).
+   $PROGRAM supports two main methods:
+   <ul>
+    <li> <b>Low time-to-live method</b>: This method substitutes a "ghost"
+         packet for every packet that is sent via the tunnel.
+         The ghost packet is given a low time-to-live (TTL) value to ensure
+         it reaches the NAT but never reaches the destination web server.
+    <li> <b>Bad checksum method</b>: This method substitutes a "ghost" packet
+         with a bad TCP (or UDP) checksum.
+         The ghost packet will reach the destination web server, however it 
+         will be dropped because of the invalid checksum.
+    <li> <b>Combination method</b>: This combines both the low TTL and bad
+         checksum methods.
+   </ul>
+  </p>
+  <p>
+   <b><i>NOTE:</i></b> Ghost packets carry randomized payloads.
+   The tunneled payload is never revealed by a ghost packet.
+  </p>
+  <p>
+   <b><i>NOTE:</i></b> Only select the "<i>Bad checksum method</i>" if the
+   "<i>Low time-to-live method</i>" does not work.
+   The bad checksum method may waste web server bandwidth.
+  </p>
+  <p>
+   <b><i>NOTE:</i></b> Some NAT implementations are incompatible with both
+   traversal methods.
+   In this case the only solution is to remove the NAT altogether, or
+   to purchase a new router/modem with a compatible NAT.
+  </p>
+ </div>
+
+ <div class="question">
+  <a name="what_hops">Ghost Packet Hops</a>
+ </div>
+ <div class="answer">
+  <p>
+   If $PROGRAM is using the "<i>Low time-to-live method</i>" or
+   "<i>Combination method</i>" for NAT traversal, the <i>Ghost Packet Hops</i>
+   control determines how many hops the ghost packets live for.
+   In other words, this option sets the IPv4 time-to-live (TTL) value for
+   ghost packets.
+   This should be the number of hops to your NAT plus 1.
+   For a typical home network configuration this value should be 2 or 3.
+  </p>
+ </div>
+
+ <div class="question">
+  <a name="what_split">Packet Splitting Method</a>
+ </div>
+ <div class="answer">
+  <p>
+   The <i>Packet Splitting Method</i> control determines how packet splitting
+   is implemented.
+   The options are:
+   <ul>
+    <li> <b>Network layer</b>: Split packets at the network layer using
+         IPv4 fragmentation.
+    <li> <b>Transport layer</b>: Split packets at the transport (TCP) layer.
+   </ul>
+  </p>
+  <p>
+   <b><i>NOTE:</i></b> Splitting packets on the network layer is problematic.
+   Some router/modems attempt to reassemble fragmented packets which 
+   prevents the <i>network layer</i> method from working.
+   It this recommended to use <i>transport layer</i> packet splitting.
+  </p>
+ </div>
+
+ <div class="question">
+  <a name="what_multi">Multi-route Enabled</a>
+ </div>
+ <div class="answer">
+  <p>
+   The <i>Multi-route Enabled</i> control determines whether packets from
+   a single TCP flow can be split up over multiple tunnels (routes).
+   In theory, TCP/IP should support this, however in practice it appears
+   not to work for some web servers, so is disabled by default.
+  </p>
+ </div>
+
+ <hr>
  <a name="log"><h2>Log Tab</h2></a>
  <div class="question">
-  <a name="what_log">What are the log messages?</a>
+  <a name="what_log">Log messages</a>
  </div>
  <div class="answer">
   <p>
@@ -178,11 +373,11 @@
  </div>
 
  <div class="question">
-  <a name="what_disp">What is "Display messages"?</a>
+  <a name="what_disp">Display Messages</a>
  </div>
  <div class="answer">
   <p>
-   This controls which kinds of messages are printed.
+   The <i>Display Messages</i> control determines the log message verbosity.
    The options are:
    <ul>
     <li> <b>All Messages</b>: Prints every kind of message.
@@ -194,198 +389,9 @@
   </p>
  </div>
 
- <hr>
- <a name="options"><h2>Options Tab</h2></a>
- <div class="question">
-  <a name="what_enabled">What is "$PROGRAM enabled"?</a>
- </div>
- <div class="answer">
-  <p>
-   This controls whether or not $PROGRAM tunnels packets.
-   The options are:
-   <ul>
-    <li> <b>Enabled</b>: $PROGRAM will tunnel packets
-    <li> <b>Disabled</b>: $PROGRAM will not tunnel packets
-   </ul>
-  </p>
-  <p>
-   When disabled, $PROGRAM offers no protection against ISP-level censorship
-   systems.
-  </p>
- </div>
-
- <div class="question">
-  <a name="what_hide">What is "Hiding mode"?</a>
- </div>
- <div class="answer">
-  <p>
-   This decides which outbound packets are tunneled or split.
-   The options are:
-   <ol>
-    <li> <b>Off</b>: Do not tunnel/split any traffic.
-    <li> <b>Passive (Split Only)</b>: Split outbound packets such that no
-          single fragment contains a complete URL.
-          This mode is effective against some ISP-level censorship technologies.
-    <li> <b>Active-Low (Tunnel Partial URL)</b>: Similar to the above but
-          tunnels one of the fragments containing URL data will be tunneled.
-    <li> <b>Active-Medium (Tunnel Full URL)</b>: Similar to the above but
-          tunnels a fragment containing the full URL.
-    <li> <b>Active-High (Tunnel Data)</b>: Tunnels packets that contain data.
-         TCP control packets such as SYNs, ACKs, etc., are not tunneled.
-    <li> <b>Active-Highest (Tunnel Everything)</b>: Tunnel all outbound
-         packets.
-   </ol>
-  </p>
-  <p>
-   <b><i>NOTE:</i></b> Whether or not an option is effective depends on the
-   ISP-level censorship technology you wish to bypass.
-   In a nutshell, the "<i>Active-Highest (Tunnel Everything)</i>" is the most
-   conservative mode that is most likely to be effective.
-   However, this mode is also the slowest because it tunnels the most packets.
-   The "<i>Passive (Split Only)</i>" mode is the fastest but is
-   only effective against specific inspection/logging systems that 
-   (incorrectly) assume URL data will be contained within single packets.
-   It is recommended you choose the least conservative mode that works.
-  </p>
- </div>
-
- <div class="question">
-  <a name="what_autolaunch">What is "Auto-Launch WebUI"?</a>
- </div>
- <div class="answer">
-  <p>
-   This controls whether or not the $PROGRAM webUI is automatically launched
-   on startup.
-   The options are:
-   <ul>
-    <li> <b>Enabled</b>: $PROGRAM webUI is automatically launched
-    <li> <b>Disabled</b>: $PROGRAM webUI is not automatically launched
-   </ul>
-  </p>
- </div>
-
- <div class="question">
-  <a name="what_dns">What is "DNS Hiding"?</a>
- </div>
- <div class="answer">
-  <p>
-   This tunnels DNS requests in addition to HTTP(S) requests.
-   This may be useful against ISP-level censorship systems that use
-   <a href="http://en.wikipedia.org/wiki/DNS_cache_poisoning">DNS Cache
-   Poisoning</a>.
-   To use this option, you must first configure your operating system to use an
-   <i>external</i> DNS server such as
-   <a href="http://code.google.com/speed/public-dns/">Google public DNS</a>
-   or
-   <a href="http://www.opendns.com/">OpenDNS</a>.
-   Do <b>NOT</b> use the DNS provided by your ISP.
-   Once correctly configured:
-   <ul>
-    <li> <b>Enabled</b>: Enables DNS request tunneling
-    <li> <b>Disabled</b>: Disables DNS request tunneling
-   </ul>
-  </p>
- </div>
-
- <div class="question">
-  <a name="what_nat">What is "Use NAT Traversal"?</a>
- </div>
- <div class="answer">
-  <p>
-   Most home router/modems use
-   <a href="http://en.wikipedia.org/wiki/Network_address_translation">
-   Network Address Translation</a> (NAT) to allow multiple computers to share
-   a single broadband connection.
-   Because $PROGRAM tunnels TCP packets, a
-   <a href="http://en.wikipedia.org/wiki/NAT_traversal">NAT traversal</a>
-   method is required.
-   The options are:
-   <ul>
-    <li> <b>Never</b>: Never use NAT traversal.
-    <li> <b>Automatic</b>: Use NAT traversal only if a NAT is detected.
-         NAT detection works by checking whether your computer's IP address is 
-         private or public.
-         A private address is assumed to indicate a NAT.
-    <li> <b>Always</b>: Always use NAT traversal.
-   </ul>
-  </p>
- </div>
-
- <div class="question">
-  <a name="what_nat_meth">What is "NAT traversal method"?</a>
- </div>
- <div class="answer">
-  <p>
-   There are two NAT traversal methods that are currently supported by
-   $PROGRAM.
-   The methods are:
-   <ul>
-    <li> <b>Low time-to-live method</b>: This method substitutes a "ghost"
-         packet for every packet that is sent via the tunnel.
-         The ghost packet is given a low time-to-live (TTL) value to ensure
-         it reaches the NAT but never reaches the destination web server.
-    <li> <b>Bad checksum method</b>: This method substitutes a "ghost" packet
-         with a bad TCP (or UDP) checksum.
-         The ghost packet will reach the destination web server, however it 
-         will be dropped because of the invalid checksum.
-    <li> <b>Combination method</b>: This combines both the low TTL and bad
-         checksum methods.
-   </ul>
-  </p>
-  <p>
-   <b><i>NOTE:</i></b> Ghost packets carry randomized HTTP(S) (or DNS) payloads.
-   The tunneled payload is never revealed by a ghost packet.
-  </p>
-  <p>
-   <b><i>NOTE:</i></b> Only select the "<i>Bad checksum method</i>" if the
-   "<i>Low time-to-live method</i>" does not work.
-   The bad checksum method causes the web server to consume extra bandwidth.
-  </p>
-  <p>
-   <b><i>NOTE:</i></b> Some NAT implementations are incompatible with both
-   traversal methods.
-   In this case the only solution is to remove the NAT altogether.
-  </p>
- </div>
-
- <div class="question">
-  <a name="what_hops">What is "Ghost packet hops"?</a>
- </div>
- <div class="answer">
-  <p>
-   If $PROGRAM is using the "<i>Low time-to-live method</i>" or
-   "<i>Combination method</i>" for NAT traversal, this option controls how
-   many hops the ghost packets live for.
-   In other words, this option sets the IPv4 time-to-live (TTL) value for
-   ghost packets.
-   This should be the number of hops to your NAT plus 1.
-   For a typical home network configuration this value should be 2.
-  </p>
- </div>
-
- <div class="question">
-  <a name="what_split">What is "Packet splitting method"?</a>
- </div>
- <div class="answer">
-  <p>
-   This option decides how the packet splitting is implemented.
-   The options are:
-   <ul>
-    <li> <b>Network layer</b>: Split packets at the network layer using
-         IPv4 fragmentation.
-    <li> <b>Transport layer</b>: Split packets at the transport (TCP) layer.
-   </ul>
-  </p>
-  <p>
-   <b><i>NOTE:</i></b> Splitting packets on the network layer is problematic.
-   Some home routers attempt to reassemble fragmented packets which 
-   breaks packet splitting altogether.
-   Splitting packets at the transport layer appears to work much better.
-  </p>
- </div>
 
  <hr>
- <a name="tunnels"><h2>Tunnels Tab</h2></a>
+ <a name="tunnels"><h2>Tunnels</h2></a>
  <div class="question">
   <a name="what_url">What is a tunnel URL?</a>
  </div>
@@ -505,29 +511,4 @@
    The <tt>size</tt> option is incompatible with <tt>min</tt>/<tt>max</tt>.
   </p>
  </div>
-
- <div class="question">
-  <a name="what_open">What are the "OPEN" and "AVAILABLE" tunnels?</a>
- </div>
- <div class="answer">
-  <p>
-   The set of "OPEN" tunnels are those that are currently available for
-   tunneling packets.
-   The set of "AVAILABLE" tunnels include all URLs that are known by the
-   client, but are not necessarily open.
-   You need at least one open tunnel for $PROGRAM to work.
-  </p>
- </div>
-
- <div class="question">
-  <a name="what_add">What is "Add/Remove tunnels"?</a>
- </div>
- <div class="answer">
-  <p>
-   This allows you to add new tunnel URLs or to delete existing tunnels.
-   Any added tunnel is immediately opened for use.
-  </p>
- </div>
 </div>
-</body>
-</html>
