@@ -1,6 +1,6 @@
 /*
- * install.h
- * (C) 2017, all rights reserved,
+ * install.c
+ * (C) 2018, all rights reserved,
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -28,6 +28,8 @@
 #include "misc.h"
 #include "tunnel.h"
 
+#define VERSION_FILENAME    PROGRAM_NAME ".version"
+
 #ifdef WINDOWS
 #define SKIP_data_install_browser_sh    1
 #endif
@@ -37,65 +39,62 @@
 /*
  * Prototypes.
  */
-static void install_file(const char *keyname, const char *filename);
+static void install_file(const char *keyname, const char *filename, bool force);
 
 /*
  * Install files (if required).
  */
 void install_files(void)
 {
-    FILE *file = fopen(CONFIG_FILENAME, "r");
-    if (file == NULL && errno == ENOENT)
+    bool force = false;
+    FILE *file = fopen(VERSION_FILENAME, "r");
+    if (file == NULL)
     {
-        log("installing \"%s\"", CONFIG_FILENAME);
-        install_file("install.config", CONFIG_FILENAME);
+        force = true;
     }
-    else if (file != NULL)
+    else
     {
-        fclose(file);
-    }
-
-    file = fopen(TUNNELS_FILENAME, "r");
-    if (file == NULL && errno == ENOENT)
-    {
-        log("installing \"%s\"", TUNNELS_FILENAME);
-        install_file("install.cache", TUNNELS_FILENAME);
-    }
-    else if (file != NULL)
-    {
-        fclose(file);
+        unsigned major, minor;
+        if (fscanf(file, "%u.%u", &major, &minor) != 2)
+        {
+            force = true;
+        }
+        else
+        {
+            force = (major < 1 || minor < 4);
+        }
     }
 
-    file = fopen(CRYPT_CERT_CACHE_FILENAME, "r");
-    if (file == NULL && errno == ENOENT)
-    {
-        log("installing \"%s\"", CRYPT_CERT_CACHE_FILENAME);
-        install_file("install.crypt.cache", CRYPT_CERT_CACHE_FILENAME);
-    }
-    else if (file != NULL)
-    {
-        fclose(file);
-    }
-
+    install_file("install.version", VERSION_FILENAME, force);
+    install_file("install.config", CONFIG_FILENAME, force);
+    install_file("install.cache", TUNNELS_FILENAME, force);
+    install_file("install.crypt.cache", CRYPT_CERT_CACHE_FILENAME, force);
 #ifndef WINDOWS
-    file = fopen(BROWSER_FILENAME, "r");
-    if (file == NULL && errno == ENOENT)
-    {
-        log("installing \"%s\"", BROWSER_FILENAME);
-        install_file("install.browser.sh", BROWSER_FILENAME);
-    }
-    else if (file != NULL)
-    {
-        fclose(file);
-    }
+    install_file("install.browser.sh", BROWSER_FILENAME, force);
 #endif /* WINDOWS */
 }
 
 /*
  * Install a file.
  */
-static void install_file(const char *keyname, const char *filename)
+static void install_file(const char *keyname, const char *filename, bool force)
 {
+    bool install = force;
+    if (!force)
+    {
+        FILE *file = fopen(filename, "r");
+        install = (file == NULL && errno == ENOENT);
+        if (file != NULL)
+        {
+            fclose(file);
+        }
+    }
+    if (!install)
+    {
+        return;
+    }
+    log("installing \"%s\"", filename);
+
     struct file_data_s key;
     key.name = keyname;
 
