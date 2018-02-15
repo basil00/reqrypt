@@ -881,6 +881,7 @@ static void *tunnel_reconnect(void *url_ptr)
     {
         // Success, replace the old tunnel with the new version:
         thread_lock(&tunnels_lock);
+        tunnel->state = TUNNEL_STATE_OPEN;
         tunnel_t replaced_active = tunnel_set_replace(&tunnels_active, tunnel);
         tunnel_t replaced_cache  = tunnel_set_replace(&tunnels_cache, tunnel);
         bool found = false;
