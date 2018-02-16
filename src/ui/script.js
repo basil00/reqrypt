@@ -196,16 +196,19 @@ function copyFromState()
         // given filter parameters:
         if (document.state.HIDE_TCP.value == "false")
         {
+            document.options.http_mode.style.backgroundColor = "#ffaaaa";
             document.options.http_mode.value = "none";
         }
         else if (document.state.HIDE_TCP_DATA.value == "true")
         {
             if (document.state.TUNNEL.value == "false")
             {
+                document.options.http_mode.style.backgroundColor = "#ffffaa";
                 document.options.http_mode.value = "split";
             }
             else
             {
+                document.options.http_mode.style.backgroundColor = "#aaffaa";
                 switch (document.state.SPLIT_MODE.value)
                 {
                     case "none":
@@ -222,6 +225,7 @@ function copyFromState()
         }
         else
         {
+            document.options.http_mode.style.backgroundColor = "#aaffaa";
             document.options.http_mode.value = "all";
         }
         switch (document.state.GHOST_MODE.value)

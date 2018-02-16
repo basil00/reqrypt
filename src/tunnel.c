@@ -127,13 +127,13 @@ static bool tunnel_html(http_buffer_t buff, tunnel_set_t tunnel_set)
         switch (tunnel->state)
         {
             case TUNNEL_STATE_OPEN:
-                http_buffer_puts(buff, "#ddffdd");
+                http_buffer_puts(buff, "#aaffaa");
                 break;
             case TUNNEL_STATE_CLOSED:
-                http_buffer_puts(buff, "#ffdddd");
+                http_buffer_puts(buff, "#ffaaaa");
                 break;
             default:
-                http_buffer_puts(buff, "#ffffdd");
+                http_buffer_puts(buff, "#ffffaa");
                 break;
         }
         http_buffer_puts(buff, "\" title=\"Tunnel ");

@@ -122,7 +122,10 @@ function closeTunnel()
 
 function delTunnel()
 {
-    document.state.DEL_URL.value = document.options.tunnel.value;
+    var tunnel = document.options.tunnel.value;
+    if (!confirm("Permanently delete tunnel " + tunnel + "?"))
+        return;
+    document.state.DEL_URL.value = tunnel;
     document.options.tunnel.value = "";
     doSubmit();
 }

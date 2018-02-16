@@ -4,7 +4,7 @@
  $INCLUDE(head.html)
  <script src="tunnels.js" rel="text/javascript"></script>
 </head>
-<body class="style" onLoad="doLoad(); getTunnels(); getMOTD()">
+<body class="style" onLoad="doLoad(); getTunnels()">
 <div class="wrap">
  $INCLUDE(title.html)
  $INCLUDE(tabs.html)
@@ -57,28 +57,28 @@
     <select class="input" title="Select what HTTP traffic $PROGRAM will hide from filters."
             name="http_mode" onChange="doSubmit()">
      <option title="Do not split/tunnel HTTP(S) traffic from this computer."
-             value="none">
+             value="none" style="background-color: #ffaaaa;">
       Off
      </option>
      <option title="Split HTTP(S) traffic containing URL data from this
      computer (split packets will not be tunneled)."
-             value="split">
+             value="split" style="background-color: #ffffaa;">
       Passive (Split Only)
      </option>
      <option title="Tunnel HTTP(S) traffic fragments containing URL data (but only tunnel part of the URL)."
-             value="urlpart">
+             value="urlpart" style="background-color: #aaffaa;">
       Active-Low (Tunnel Partial URL)
      </option>
      <option title="Tunnel HTTP(S) traffic containing URL data."
-             value="url">
+             value="url" style="background-color: #aaffaa;">
       Active-Medium (Tunnel Full URL)
      </option>
      <option title="Tunnel all HTTP(S) traffic containing data."
-             value="data">
+             value="data" style="background-color: #aaffaa;">
       Active-High (Tunnel Data)
      </option>
      <option title="Tunnel all HTTP(S) traffic."
-             value="all">
+             value="all" style="background-color: #aaffaa;">
       Active-Highest (Tunnel Everything)
      </option>
     </select>
