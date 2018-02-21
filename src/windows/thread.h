@@ -1,6 +1,6 @@
 /*
  * thread.h
- * (C) 2017, all rights reserved,
+ * (C) 2018, all rights reserved,
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -28,6 +28,10 @@ static inline int thread_create(thread_t *thread, void *(*start)(void *),
 {
     *thread = CreateThread(NULL, 1, (LPTHREAD_START_ROUTINE)start, (LPVOID)arg,
         0, NULL);
+    if (*thread != NULL)
+    {
+        CloseHandle(*thread);
+    }
     return (*thread == NULL? -1: 0);
 }
 

@@ -1,6 +1,6 @@
 /*
  * thread.h
- * (C) 2017, all rights reserved,
+ * (C) 2018, all rights reserved,
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,7 +26,12 @@ typedef pthread_mutex_t mutex_t;
 static inline int thread_create(thread_t *thread, void *(*start)(void *),
     void *arg)
 {
-    return pthread_create(thread, NULL, start, arg);
+    int result = pthread_create(thread, NULL, start, arg);
+    if (result == 0)
+    {
+        result = pthread_detach(*thread);
+    }
+    return result;
 }
 
 static inline int thread_lock_init(mutex_t *lock)

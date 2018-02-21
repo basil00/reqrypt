@@ -93,7 +93,6 @@ struct tunnel_history_s
  */
 static mutex_t tunnels_lock;
 static struct tunnel_set_s tunnels_cache = TUNNEL_SET_INIT;
-static struct tunnel_set_s tunnels_active = TUNNEL_SET_INIT;
 static uint64_t tunnel_flow_offset = 0;
 static random_state_t rng = NULL;
 
@@ -104,12 +103,13 @@ static bool tunnel_html(http_buffer_t buff, tunnel_set_t tunnel_set);
 static void tunnel_set_insert(tunnel_set_t tunnel_set, tunnel_t tunnel);
 static tunnel_t tunnel_set_replace(tunnel_set_t tunnel_set, tunnel_t tunnel);
 static tunnel_t tunnel_set_delete(tunnel_set_t tunnel_set, const char *url);
-static int tunnel_set_lookup(tunnel_set_t tunnel_set, const char *url);
+static tunnel_t tunnel_set_lookup(tunnel_set_t tunnel_set, const char *url);
+static bool tunnel_set_ready(tunnel_set_t tunnel_set);
 static tunnel_t tunnel_create(const char *url, uint8_t age, bool enabled);
 static void tunnel_free(tunnel_t tunnel);
 static void *tunnel_activate_manager(void *unused);
 static void *tunnel_activate(void *tunnel_ptr);
-static bool tunnel_try_activate(tunnel_t tunnel);
+static state_t tunnel_try_activate(tunnel_t tunnel, bool reopen);
 static tunnel_t tunnel_get(uint64_t hash, unsigned repeat);
 static void *tunnel_reconnect_manager(void *unused);
 static void *tunnel_reconnect(void *tunnel_ptr);
@@ -129,18 +129,32 @@ static bool tunnel_html(http_buffer_t buff, tunnel_set_t tunnel_set)
             case TUNNEL_STATE_OPEN:
                 http_buffer_puts(buff, "#aaffaa");
                 break;
-            case TUNNEL_STATE_CLOSED:
-                http_buffer_puts(buff, "#ffaaaa");
+            case TUNNEL_STATE_OPENING:
+                http_buffer_puts(buff, "#ffffaa");
                 break;
             default:
-                http_buffer_puts(buff, "#ffffaa");
+                http_buffer_puts(buff, "#ffaaaa");
                 break;
         }
         http_buffer_puts(buff, "\" title=\"Tunnel ");
         http_buffer_puts(buff, tunnel->url);
         http_buffer_puts(buff, " is ");
-        http_buffer_puts(buff,
-            (tunnel->state == TUNNEL_STATE_OPEN? "open and in use": "closed"));
+        switch (tunnel->state)
+        {
+            case TUNNEL_STATE_OPEN:
+                http_buffer_puts(buff, "open");
+                break;
+            case TUNNEL_STATE_OPENING:
+                http_buffer_puts(buff, "opening");
+                break;
+            default:
+                http_buffer_puts(buff, "closed");
+                if (!tunnel->enabled)
+                {
+                    http_buffer_puts(buff, " and disabled");
+                }
+                break;
+        }
         http_buffer_puts(buff, ".\" value=\"");
         http_buffer_puts(buff, tunnel_set->tunnels[i]->url);
         http_buffer_puts(buff, "\">");
@@ -149,14 +163,6 @@ static bool tunnel_html(http_buffer_t buff, tunnel_set_t tunnel_set)
     }
     thread_unlock(&tunnels_lock);
     return true;
-}
-
-/*
- * Print active tunnels as HTML.
- */
-bool tunnel_active_html(http_buffer_t buff)
-{
-    return tunnel_html(buff, &tunnels_active);
 }
 
 /*
@@ -196,7 +202,9 @@ static tunnel_t tunnel_set_replace(tunnel_set_t tunnel_set, tunnel_t tunnel)
     for (size_t i = 0; i < tunnel_set->length; i++)
     {
         tunnel_t tunnel_old = tunnel_set->tunnels[i];
-        if (strcmp(tunnel_old->url, tunnel->url) == 0)
+        if ((tunnel_old->state == TUNNEL_STATE_OPEN ||
+             tunnel_old->state == TUNNEL_STATE_CLOSED) &&
+            strcmp(tunnel_old->url, tunnel->url) == 0)
         {
             tunnel_set->tunnels[i] = tunnel;
             return tunnel_old;
@@ -230,16 +238,31 @@ static tunnel_t tunnel_set_delete(tunnel_set_t tunnel_set, const char *url)
 /*
  * Find a tunnel in a tunnel_set_s.
  */
-static int tunnel_set_lookup(tunnel_set_t tunnel_set, const char *url)
+static tunnel_t tunnel_set_lookup(tunnel_set_t tunnel_set, const char *url)
 {
     for (size_t i = 0; i < tunnel_set->length; i++)
     {
         if (strcmp(tunnel_set->tunnels[i]->url, url) == 0)
         {
-            return (int)i;
+            return tunnel_set->tunnels[i];
         }
     }
-    return -1;
+    return NULL;
+}
+
+/*
+ * Test if any tunnel is ready.
+ */
+static bool tunnel_set_ready(tunnel_set_t tunnel_set)
+{
+    for (size_t i = 0; i < tunnel_set->length; i++)
+    {
+        if (tunnel_set->tunnels[i]->state == TUNNEL_STATE_OPEN)
+        {
+            return true;
+        }
+    }
+    return false;
 }
 
 /*
@@ -249,7 +272,6 @@ void tunnel_init(void)
 {
     thread_lock_init(&tunnels_lock);
     rng = random_init();
-    http_register_callback("tunnels-active.html", tunnel_active_html);
     http_register_callback("tunnels-all.html", tunnel_all_html);
     tunnel_flow_offset = random_uint64(rng);
 }
@@ -428,20 +450,7 @@ static tunnel_t tunnel_create(const char *url, uint8_t age, bool enabled)
  */
 static void tunnel_free(tunnel_t tunnel)
 {
-    if (tunnel != NULL)
-    {
-        switch (tunnel->state)
-        {
-            case TUNNEL_STATE_OPENING:
-                tunnel->state = TUNNEL_STATE_DELETING;
-                break;
-            case TUNNEL_STATE_DELETING:
-                break;
-            default:
-                cktp_close_tunnel(tunnel->tunnel);
-                free(tunnel);
-        }
-    }
+    free(tunnel);
 }
 
 /*
@@ -461,7 +470,7 @@ void tunnel_open(void)
 bool tunnel_ready(void)
 {
     thread_lock(&tunnels_lock);
-    bool result = (tunnels_active.length != 0);
+    bool result = tunnel_set_ready(&tunnels_cache);
     thread_unlock(&tunnels_lock);
     return result;
 }
@@ -469,16 +478,14 @@ bool tunnel_ready(void)
 /*
  * Tunnel activator thread.
  */
-#define MAX_INIT_OPEN               8
 static void *tunnel_activate_manager(void *unused)
 {
-    do
+    while (true)
     {
         // Attempt to open new tunnels.
         thread_lock(&tunnels_lock);
-        size_t max = MAX_INIT_OPEN - tunnels_active.length + 1;
         size_t j = 0;
-        for (size_t i = 0; j < max && i < tunnels_cache.length; i++)
+        for (size_t i = 0; i < tunnels_cache.length; i++)
         {
             tunnel_t tunnel = tunnels_cache.tunnels[i];
             if (tunnel->enabled && tunnel->state == TUNNEL_STATE_CLOSED)
@@ -492,15 +499,9 @@ static void *tunnel_activate_manager(void *unused)
         uint64_t stagger = random_uint64(rng);
         thread_unlock(&tunnels_lock);
 
-        if (j == max)
-        {
-            break;
-        }
-
         // Wait for some tunnels to open:
         sleeptime(150*SECONDS + (stagger % 10000) * MILLISECONDS);
     }
-    while (tunnels_active.length < MAX_INIT_OPEN);
 
     return NULL;
 }
@@ -508,64 +509,36 @@ static void *tunnel_activate_manager(void *unused)
 /*
  * Queue a tunnel for use.
  */
-#define MAX_RETRIES                 3
 static void *tunnel_activate(void *tunnel_ptr)
 {
     tunnel_t tunnel = (tunnel_t)tunnel_ptr;
-    bool result = tunnel_try_activate(tunnel);
-    thread_lock(&tunnels_lock);
-    switch (tunnel->state)
-    {
-        case TUNNEL_STATE_DELETING:
-            tunnel->state = TUNNEL_STATE_OPEN;
-            tunnel_free(tunnel);
-            break;
-        case TUNNEL_STATE_CLOSING:
-            tunnel->state = TUNNEL_STATE_CLOSED;
-            cktp_close_tunnel(tunnel->tunnel);
-            tunnel->tunnel = NULL;
-            break;
-        case TUNNEL_STATE_OPENING:
-            if (result)
-            {
-                log("successfully opened tunnel %s", tunnel->url);
-                tunnel->state = TUNNEL_STATE_OPEN;
-                tunnel->age   = TUNNEL_INIT_AGE;
-                tunnel_set_insert(&tunnels_active, tunnel);
-            }
-            else
-            {
-                log("unable to open tunnel %s; giving up", tunnel->url);
-                tunnel->state = TUNNEL_STATE_DEAD;
-                tunnel->age = (tunnel->age == 0? 0: tunnel->age - 1);
-            }
-            break;
-        default:
-            panic("unexpected tunnel state %u", tunnel->state);
-    }
-    thread_unlock(&tunnels_lock);
-
-    tunnel_file_write();
+    tunnel_try_activate(tunnel, false);
     return NULL;
 }
 
 /*
  * Attempt to activate the given tunnel.
  */
-static bool tunnel_try_activate(tunnel_t tunnel)
+#define MAX_RETRIES                 4
+static state_t tunnel_try_activate(tunnel_t tunnel, bool reopen)
 {
+    const char *re = (reopen? "(re)": "");
+    unsigned retries = MAX_RETRIES;
+    cktp_tunnel_t ctunnel = NULL;
     thread_lock(&tunnels_lock);
     uint64_t stagger = (random_uint32(rng) % 1000) * MILLISECONDS;
-    thread_unlock(&tunnels_lock);
     uint64_t retry_time_us = 10*SECONDS + stagger;
-    unsigned retries = MAX_RETRIES;
+    tunnel->tunnel = NULL;
+    const char *url = tunnel->url;
     while (tunnel->state == TUNNEL_STATE_OPENING)
     {
-        log("attempting to open tunnel %s", tunnel->url);
-        tunnel->tunnel = cktp_open_tunnel(tunnel->url);
-        if (tunnel->tunnel != NULL)
+        thread_unlock(&tunnels_lock);
+        log("attempting to %sopen tunnel %s", re, url);
+        ctunnel = cktp_open_tunnel(url);
+        thread_lock(&tunnels_lock);
+        if (ctunnel != NULL)
         {
-            return true;
+            break;
         }
         if (tunnel->state != TUNNEL_STATE_OPENING)
         {
@@ -574,14 +547,41 @@ static bool tunnel_try_activate(tunnel_t tunnel)
         retries--;
         if (retries == 0)
         {
-            return false;
+            tunnel->state = TUNNEL_STATE_CLOSED;
+            tunnel->enabled = false;
+            thread_unlock(&tunnels_lock);
+            log("unable to %sopen tunnel %s; giving up", re, url);
+            return TUNNEL_STATE_CLOSED;
         }
-        log("unable to open tunnel %s; retrying in %.1f seconds", tunnel->url,
+        thread_unlock(&tunnels_lock);
+        log("unable to %sopen tunnel %s; retrying in %.1f seconds", re, url,
             (double)retry_time_us / (double)SECONDS);
         sleeptime(retry_time_us);
         retry_time_us *= 6;
     }
-    return true;
+    switch (tunnel->state)
+    {
+        case TUNNEL_STATE_OPENING:
+            tunnel->tunnel = ctunnel;
+            tunnel->state  = TUNNEL_STATE_OPEN;
+            tunnel->age    = TUNNEL_INIT_AGE;
+            thread_unlock(&tunnels_lock);
+            log("successfully %sopened tunnel %s", re, url);
+            return TUNNEL_STATE_OPEN;
+        case TUNNEL_STATE_DELETING:
+            tunnel->state = TUNNEL_STATE_DEAD;
+            thread_unlock(&tunnels_lock);
+            tunnel_free(tunnel);
+            cktp_close_tunnel(ctunnel);
+            return TUNNEL_STATE_DEAD;
+        case TUNNEL_STATE_CLOSING:
+            tunnel->state = TUNNEL_STATE_CLOSED;
+            thread_unlock(&tunnels_lock);
+            cktp_close_tunnel(ctunnel);
+            return TUNNEL_STATE_CLOSED;
+        default:
+            panic("unexpected tunnel state %u", tunnel->state);
+    }
 }
 
 /*
@@ -672,7 +672,7 @@ static tunnel_t tunnel_get(uint64_t hash, unsigned repeat)
 {
     static struct tunnel_history_s tunnel_history[TUNNEL_HISTORY_SIZE];
 
-    if (tunnels_active.length == 0)
+    if (tunnels_cache.length == 0)
     {
         return NULL;
     }
@@ -680,19 +680,25 @@ static tunnel_t tunnel_get(uint64_t hash, unsigned repeat)
     uint32_t hist_hash = (uint32_t)(hash ^ (hash >> 32));
     uint32_t weight_hash = hist_hash * (repeat + 1);
     double total_weight = 0.0;
-    for (size_t i = 0; i < tunnels_active.length; i++)
+    for (size_t i = 0; i < tunnels_cache.length; i++)
     {
-        total_weight += tunnels_active.tunnels[i]->weight;
+        if (tunnels_cache.tunnels[i]->state == TUNNEL_STATE_OPEN)
+        {
+            total_weight += tunnels_cache.tunnels[i]->weight;
+        }
     }
     double pick = ((double)weight_hash / (double)UINT32_MAX) * total_weight;
 
     size_t idx;
-    for (idx = 0; idx < tunnels_active.length &&
-            pick >= tunnels_active.tunnels[idx]->weight; idx++)
+    for (idx = 0; idx < tunnels_cache.length &&
+            pick >= tunnels_cache.tunnels[idx]->weight; idx++)
     {
-        pick -= tunnels_active.tunnels[idx]->weight;
+        if (tunnels_cache.tunnels[idx]->state == TUNNEL_STATE_OPEN)
+        {
+            pick -= tunnels_cache.tunnels[idx]->weight;
+        }
     }
-    tunnel_t tunnel = tunnels_active.tunnels[idx];
+    tunnel_t tunnel = tunnels_cache.tunnels[idx];
 
     if (repeat != 0)
     {
@@ -704,12 +710,12 @@ static tunnel_t tunnel_get(uint64_t hash, unsigned repeat)
         if (tunnel_history[hist_idx].hash == hist_hash)
         {
             // Punish the tunnel that failed to send the packet:
-            for (size_t i = 0; i < tunnels_active.length; i++)
+            for (size_t i = 0; i < tunnels_cache.length; i++)
             {
-                if (tunnels_active.tunnels[i]->id ==
+                if (tunnels_cache.tunnels[i]->id ==
                         tunnel_history[hist_idx].id)
                 {
-                    bad_tunnel = tunnels_active.tunnels[i];
+                    bad_tunnel = tunnels_cache.tunnels[i];
                     pick -= bad_tunnel->weight;
                     bad_tunnel->weight = bad_tunnel->weight * 0.75;
                     bad_tunnel->weight = (bad_tunnel->weight < 0.005?
@@ -717,13 +723,6 @@ static tunnel_t tunnel_get(uint64_t hash, unsigned repeat)
                     break;
                 }
             }
-        }
-
-        // Pick a different tunnel (if possible)
-        if (tunnel == bad_tunnel)
-        {
-            idx = (idx + 1) % tunnels_active.length;
-            tunnel = tunnels_active.tunnels[idx];
         }
     }
 
@@ -750,32 +749,34 @@ void tunnel_open_url(const char *url)
     }
 
     thread_lock(&tunnels_lock);
-    int idx = tunnel_set_lookup(&tunnels_cache, url);
-    tunnel_t tunnel;
-    if (idx < 0)
+    tunnel_t tunnel = tunnel_set_lookup(&tunnels_cache, url);
+    if (tunnel == NULL)
     {
         tunnel = tunnel_create(url, TUNNEL_INIT_AGE, true);
         tunnel_set_insert(&tunnels_cache, tunnel);
     }
     else
     {
-        tunnel = tunnels_cache.tunnels[idx];
         tunnel->enabled = true;
-        if (tunnel->state == TUNNEL_STATE_OPEN ||
-            tunnel->state == TUNNEL_STATE_OPENING)
+        switch (tunnel->state)
         {
-            thread_unlock(&tunnels_lock);
-            warning("unable to open tunnel %s; tunnel is already open or "
-                "opening", url);
-            return;
+            case TUNNEL_STATE_OPEN:
+            case TUNNEL_STATE_OPENING:
+                thread_unlock(&tunnels_lock);
+                warning("unable to open tunnel %s; tunnel is already open or "
+                    "opening", url);
+                return;
+            case TUNNEL_STATE_CLOSING:
+            case TUNNEL_STATE_DELETING:
+                tunnel->state = TUNNEL_STATE_OPENING;
+                thread_unlock(&tunnels_lock);
+                return;
         }
     }
     tunnel->state = TUNNEL_STATE_OPENING;
     thread_unlock(&tunnels_lock);
-    log("opened tunnel %s", url);
     thread_t thread;
     thread_create(&thread, tunnel_activate, (void *)tunnel);
-
     tunnel_file_write();
 }
 
@@ -784,17 +785,31 @@ void tunnel_open_url(const char *url)
  */
 void tunnel_close_url(const char *url)
 {
+    cktp_tunnel_t ctunnel = NULL;
     thread_lock(&tunnels_lock);
-    tunnel_t tunnel = tunnel_set_delete(&tunnels_active, url);
+    tunnel_t tunnel = tunnel_set_lookup(&tunnels_cache, url);
     if (tunnel != NULL)
     {
-        cktp_close_tunnel(tunnel->tunnel);
-        tunnel->tunnel = NULL;
+        switch (tunnel->state)
+        {
+            case TUNNEL_STATE_OPEN:
+                ctunnel = tunnel->tunnel;
+                tunnel->tunnel = NULL;
+                tunnel->state = TUNNEL_STATE_CLOSED;
+                break;
+            case TUNNEL_STATE_OPENING:
+                tunnel->state = TUNNEL_STATE_CLOSING;
+                break;
+            default:
+                break;
+        }
         tunnel->enabled = false;
-        tunnel->state = TUNNEL_STATE_CLOSED;
     }
     thread_unlock(&tunnels_lock);
-
+    if (ctunnel != NULL)
+    {
+        cktp_close_tunnel(ctunnel);
+    }
     log("closed tunnel %s", url);
     tunnel_file_write();
 }
@@ -804,23 +819,32 @@ void tunnel_close_url(const char *url)
  */
 void tunnel_delete_url(const char *url)
 {
+    cktp_tunnel_t ctunnel = NULL;
     thread_lock(&tunnels_lock);
-    tunnel_t tunnel = tunnel_set_delete(&tunnels_active, url);
+    tunnel_t tunnel = tunnel_set_delete(&tunnels_cache, url);
     if (tunnel != NULL)
     {
-        cktp_close_tunnel(tunnel->tunnel);
-        tunnel->tunnel = NULL;
-        tunnel->enabled = false;
-        tunnel->state = TUNNEL_STATE_CLOSED;
+        switch (tunnel->state)
+        {
+            case TUNNEL_STATE_OPEN:
+                ctunnel = tunnel->tunnel;
+                tunnel->tunnel = NULL;
+                tunnel->state = TUNNEL_STATE_DEAD;
+                break;
+            case TUNNEL_STATE_OPENING:
+            case TUNNEL_STATE_CLOSING:
+                tunnel->state = TUNNEL_STATE_DELETING;
+                break;
+            default:
+                break;
+        }
     }
-    tunnel = tunnel_set_delete(&tunnels_cache, url);
-    if (tunnel != NULL)
+    thread_unlock(&tunnels_lock);
+    if (ctunnel != NULL)
     {
+        cktp_close_tunnel(ctunnel);
         tunnel_free(tunnel);
     }
-            
-    thread_unlock(&tunnels_lock);
-
     log("deleted tunnel %s", url);
     tunnel_file_write();
 }
@@ -842,18 +866,19 @@ static void *tunnel_reconnect_manager(void *unused)
         sleeptime(1*SECONDS + stagger);
         thread_lock(&tunnels_lock);
         uint64_t currtime = gettime();
-        for (size_t i = 0; i < tunnels_active.length; i++)
+        for (size_t i = 0; i < tunnels_cache.length; i++)
         {
-            tunnel_t tunnel = tunnels_active.tunnels[i];
+            tunnel_t tunnel = tunnels_cache.tunnels[i];
             
             // tunnel->reconnect ensures we only try to reconnect once.
-            if (!tunnel->reconnect &&
+            if (tunnel->state == TUNNEL_STATE_OPEN &&
+                !tunnel->reconnect &&
                 cktp_tunnel_timeout(tunnel->tunnel, currtime))
             {
                 tunnel->reconnect = true;
                 char *url = strdup(tunnel->url);
                 thread_t thread;
-                thread_create(&thread, tunnel_reconnect, (void *)url); 
+                thread_create(&thread, tunnel_reconnect, (void *)url);
             }
         }
         thread_unlock(&tunnels_lock);
@@ -873,62 +898,64 @@ static void *tunnel_reconnect(void *url_ptr)
 
     char *url = (char *)url_ptr;
     tunnel_t tunnel = tunnel_create(url, TUNNEL_INIT_AGE, true);
-    free(url);
-
     tunnel->state = TUNNEL_STATE_OPENING;
-    bool result = tunnel_try_activate(tunnel);
-    if (result)
+    state_t state = tunnel_try_activate(tunnel, true);
+    if (state == TUNNEL_STATE_OPEN)
     {
         // Success, replace the old tunnel with the new version:
         thread_lock(&tunnels_lock);
-        tunnel->state = TUNNEL_STATE_OPEN;
-        tunnel_t replaced_active = tunnel_set_replace(&tunnels_active, tunnel);
-        tunnel_t replaced_cache  = tunnel_set_replace(&tunnels_cache, tunnel);
-        bool found = false;
-        if (replaced_active != NULL)
+        tunnel_t replaced_tunnel = tunnel_set_replace(&tunnels_cache, tunnel);
+        if (replaced_tunnel != NULL)
         {
-            found = true;
-            tunnel_free(replaced_active);
-        }
-        else if (replaced_cache != NULL)
-        {
-            found = true;
-            cktp_close_tunnel(tunnel->tunnel);
-            tunnel->tunnel    = NULL;
-            tunnel->state     = TUNNEL_STATE_DEAD;
-            tunnel->reconnect = false;
-            tunnel_free(replaced_cache);
-        }
-        thread_unlock(&tunnels_lock);
-        if (!found)
-        {
-            // Tunnel has been deactivated, no need for reopened tunnel
-            tunnel_free(tunnel);
+            switch (replaced_tunnel->state)
+            {
+                case TUNNEL_STATE_CLOSED:
+                    tunnel->state = replaced_tunnel->state;
+                    replaced_tunnel->tunnel = tunnel->tunnel;
+                    tunnel->tunnel = NULL;
+                    // Fallthrough
+                case TUNNEL_STATE_OPEN:
+                    thread_unlock(&tunnels_lock);
+                    cktp_close_tunnel(replaced_tunnel->tunnel);
+                    replaced_tunnel->tunnel = NULL;
+                    replaced_tunnel->state = TUNNEL_STATE_DEAD;
+                    tunnel_free(replaced_tunnel);
+                    break;
+                default:
+                    panic("unexpected tunnel state %u", tunnel->state);
+            }
+            thread_unlock(&tunnels_lock);
+            free(url);
+            return NULL;
         }
         else
         {
-            log("successfully (re)opened tunnel %s", tunnel->url);
+            // Old tunnel must be in an *ING state, meaning that the state
+            // was changed by the user.  If so, we can ignore the reopened
+            // tunnel.
+            cktp_tunnel_t ctunnel = tunnel->tunnel;
+            tunnel->tunnel = NULL;
+            tunnel->state  = TUNNEL_STATE_DEAD;
+            thread_unlock(&tunnels_lock);
+            warning("unable to (re)open tunnel %s; tunnel state was changed",
+                url);
+            cktp_close_tunnel(ctunnel);
+            tunnel_free(tunnel);
+            free(url);
+            return NULL;
         }
     }
     else
     {
-        warning("unable to (re)open tunnel %s; tunnel will be deactivated",
-            tunnel->url);
-
         // Failure, we could not (re)open the tunnel.  We assume the tunnel
         // is now dead, so deactivate it here.
-        thread_lock(&tunnels_lock);
-        tunnel_t old_tunnel = tunnel_set_delete(&tunnels_active, url);
-        if (old_tunnel != NULL)
-        {
-            cktp_close_tunnel(tunnel->tunnel);
-            tunnel->tunnel    = NULL;
-            tunnel->state     = TUNNEL_STATE_DEAD;
-            tunnel->reconnect = false;
-        }
-        thread_unlock(&tunnels_lock);
+        warning("unable to (re)open tunnel %s; tunnel will now be closed",
+            url);
+        tunnel_close_url(url);
+        tunnel->state = TUNNEL_STATE_DEAD;
         tunnel_free(tunnel);
+        free(url);
+        return NULL;
     }
-    return NULL;
 }
 
