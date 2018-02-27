@@ -124,6 +124,7 @@ struct config_s
     proto_t        udp_proto;       // UDP protocol handler.
     uint16_t       mtu;             // MTU for tunnelled packets.
     bool           launch_ui;       // Auto-launch the UI on startup.
+    bool           check_updates;   // Check for new versions of this program.
 #endif
 
 #ifdef SERVER

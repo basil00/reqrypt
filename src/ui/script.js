@@ -136,6 +136,8 @@ function copyToState()
         }
         document.state.LAUNCH_UI.value =
             copyFromRadio(document.options.launch_ui);
+        document.state.CHECK_UPDATES.value =
+            copyFromRadio(document.options.updates);
         switch (document.options.nat_mode.value)
         {
             case "never":
@@ -253,6 +255,8 @@ function copyFromState()
             document.options.nat_method.value = "checksum";
         }
         copyToRadio(document.state.LAUNCH_UI.value, document.options.launch_ui);
+        copyToRadio(document.state.CHECK_UPDATES.value,
+            document.options.updates);
         copyToSelect(document.state.FRAG_MODE.value,
             document.options.frag_mode);
         copyToRadio(document.state.HIDE_UDP.value, document.options.dns_mode);

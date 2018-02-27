@@ -3,8 +3,10 @@
 <head>
  $INCLUDE(head.html)
  <script src="tunnels.js" rel="text/javascript"></script>
+ <script src="motd.js" rel="text/javascript"></script>
 </head>
-<body class="style" onLoad="doLoad(); getTunnels()">
+<body class="style" onLoad="doLoad(); getTunnels(); getMOTD();">
+<div id="motd"></div>
 <div class="wrap">
  $INCLUDE(title.html)
  $INCLUDE(tabs.html)
@@ -93,6 +95,18 @@
     <input title="Enable WebUI auto-launch." type="radio" name="launch_ui"
            value="true" onChange="doSubmit()"> Yes
     <input title="Disable WebUI auto-launch." type="radio" name="launch_ui"
+           value="false" onChange="doSubmit()"> No
+   </div>
+  </div>
+  <div class="option">
+   <div class="label">
+     Check for updates?
+    <a href="help.html#what_updates">&#x1f6c8</a>
+   </div>
+   <div class="input">
+    <input title="Enable check for updates." type="radio" name="updates"
+           value="true" onChange="doSubmit()"> Yes
+    <input title="Disable check for updates." type="radio" name="updates"
            value="false" onChange="doSubmit()"> No
    </div>
   </div>

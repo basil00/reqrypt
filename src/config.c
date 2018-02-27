@@ -63,6 +63,7 @@
 #define VAR_UDP_PROTO           "UDP_PROTO"
 #define VAR_MTU                 "MTU"
 #define VAR_LAUNCH_UI           "LAUNCH_UI"
+#define VAR_CHECK_UPDATES       "CHECK_UPDATES"
 #define VAR_OPEN_URL            "OPEN_URL"
 #define VAR_CLOSE_URL           "CLOSE_URL"
 #define VAR_DEL_URL             "DEL_URL"
@@ -120,7 +121,8 @@ const struct config_s config_default =
     .udp_port = 53,
     .udp_proto = PROTOCOL_UDP_DEFAULT,
     .mtu = 1492,
-    .launch_ui = true
+    .launch_ui = true,
+    .check_updates = true
 #endif
 
 #ifdef SERVER
@@ -507,6 +509,8 @@ void config_callback(struct http_user_vars_s *vars)
         http_user_var_insert(vars, VAR_MTU, buff);
         http_user_var_insert(vars, VAR_LAUNCH_UI,
             bool_to_string(config.launch_ui));
+        http_user_var_insert(vars, VAR_CHECK_UPDATES,
+            bool_to_string(config.check_updates));
 
     }
     else if (http_get_bool_var(vars, VAR_SAVE, &should_save) && should_save)
@@ -605,6 +609,7 @@ static void load_config(struct http_user_vars_s *vars, struct config_s *config)
     http_get_int_var(vars, VAR_MTU, 0, UINT16_MAX, sizeof(config->mtu),
         (uint8_t *)&config->mtu);
     http_get_bool_var(vars, VAR_LAUNCH_UI, &config->launch_ui);
+    http_get_bool_var(vars, VAR_CHECK_UPDATES, &config->check_updates);
 #endif
 
 #ifdef SERVER
@@ -689,6 +694,8 @@ static void write_config(struct config_s *config)
     fprintf(file, "%s = \"%u\"\n", VAR_MTU, config->mtu);
     fprintf(file, "%s = \"%s\"\n", VAR_LAUNCH_UI,
         bool_to_string(config->launch_ui));
+    fprintf(file, "%s = \"%s\"\n", VAR_CHECK_UPDATES,
+        bool_to_string(config->check_updates));
     fclose(file);
 
 #ifdef WINDOWS
