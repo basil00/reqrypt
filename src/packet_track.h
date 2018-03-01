@@ -1,6 +1,6 @@
 /*
  * packet_track.h
- * (C) 2017, all rights reserved,
+ * (C) 2018, all rights reserved,
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,5 +22,6 @@
 #include <stdint.h>
 
 void packet_track(uint8_t *packet, uint64_t *hash, unsigned *repeat);
+uint64_t packet_hash(uint8_t *packet, bool full);
 
 #endif      /* __PACKET_TRACK_H */

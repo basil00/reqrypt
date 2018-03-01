@@ -1,6 +1,6 @@
 /*
  * packet_track.c
- * (C) 2017, all rights reserved,
+ * (C) 2018, all rights reserved,
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -38,7 +38,6 @@ struct packet_node_s
 /*
  * Prototypes.
  */
-static uint64_t packet_hash(uint8_t *packet);
 static uint64_t data_hash(void *data0, size_t data_size, uint64_t hash);
 
 /*
@@ -55,7 +54,7 @@ void packet_track(uint8_t *packet, uint64_t *hash, unsigned *repeat)
     static uint32_t seq = 0;
     seq = (seq == MAX_SEQ? 0: seq + 1);
 
-    uint64_t hash64 = packet_hash(packet);
+    uint64_t hash64 = packet_hash(packet, true);
     uint32_t hash32 = (uint32_t)hash64 ^
         (uint32_t)(hash64 >> sizeof(uint32_t));
     uint16_t hash16 = (uint16_t)hash32 ^
@@ -90,9 +89,10 @@ void packet_track(uint8_t *packet, uint64_t *hash, unsigned *repeat)
 }
 
 /*
- * Calculate the given packet's hash value.
+ * Calculate the given packet's hash value.  If full=false then just
+ * calculates flow hash.
  */
-uint64_t packet_hash(uint8_t *packet)
+uint64_t packet_hash(uint8_t *packet, bool full)
 {
     struct iphdr *ip_header;
     struct tcphdr *tcp_header;
@@ -103,21 +103,27 @@ uint64_t packet_hash(uint8_t *packet)
         &udp_header, &data, NULL, &data_size);
 
     uint64_t hash = 0x7126076C08D72A48ULL;
-    uint16_t data_size16 = (uint16_t)data_size;
-    hash = data_hash(&data_size16, sizeof(data_size16), hash);
+    if (full)
+    {
+        uint16_t data_size16 = (uint16_t)data_size;
+        hash = data_hash(&data_size16, sizeof(data_size16), hash);
+        hash = data_hash(&ip_header->saddr, sizeof(ip_header->saddr), hash);
+    }
     hash = data_hash(&ip_header->protocol, sizeof(ip_header->protocol), hash);
-    hash = data_hash(&ip_header->saddr, sizeof(ip_header->saddr), hash);
     hash = data_hash(&ip_header->daddr, sizeof(ip_header->daddr), hash);
     if (tcp_header != NULL)
     {
         hash = data_hash(&tcp_header->source, sizeof(tcp_header->source),
             hash);
         hash = data_hash(&tcp_header->dest, sizeof(tcp_header->dest), hash);
-        hash = data_hash(&tcp_header->seq, sizeof(tcp_header->seq), hash);
-        hash = data_hash(&tcp_header->ack_seq, sizeof(tcp_header->ack_seq),
-            hash);
-        uint8_t tcp_flags = *(((uint8_t *)&tcp_header->window)-1);
-        hash = data_hash(&tcp_flags, sizeof(tcp_flags), hash);
+        if (full)
+        {
+            hash = data_hash(&tcp_header->seq, sizeof(tcp_header->seq), hash);
+            hash = data_hash(&tcp_header->ack_seq, sizeof(tcp_header->ack_seq),
+                hash);
+            uint8_t tcp_flags = *(((uint8_t *)&tcp_header->window)-1);
+            hash = data_hash(&tcp_flags, sizeof(tcp_flags), hash);
+        }
     }
     else
     {
@@ -125,7 +131,10 @@ uint64_t packet_hash(uint8_t *packet)
             hash);
         hash = data_hash(&udp_header->dest, sizeof(udp_header->dest), hash);
     }
-    hash = data_hash(data, data_size, hash);
+    if (full)
+    {
+        hash = data_hash(data, data_size, hash);
+    }
     return hash;
 }
 
