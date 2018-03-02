@@ -660,25 +660,39 @@ static tunnel_t tunnel_get(uint64_t hash, unsigned repeat)
     uint32_t hist_hash = (uint32_t)(hash ^ (hash >> 32));
     uint32_t weight_hash = hist_hash * (repeat + 1);
     double total_weight = 0.0;
+    unsigned num_open = 0;
     for (size_t i = 0; i < tunnels_cache.length; i++)
     {
         if (tunnels_cache.tunnels[i]->state == TUNNEL_STATE_OPEN)
         {
             total_weight += tunnels_cache.tunnels[i]->weight;
+            num_open++;
         }
+    }
+    if (num_open == 0)
+    {
+        return NULL;
     }
     double pick = ((double)weight_hash / (double)UINT32_MAX) * total_weight;
 
-    size_t idx;
-    for (idx = 0; idx < tunnels_cache.length &&
-            pick >= tunnels_cache.tunnels[idx]->weight; idx++)
+    tunnel_t tunnel = NULL;
+    for (size_t i = 0; i < tunnels_cache.length; i++)
     {
-        if (tunnels_cache.tunnels[idx]->state == TUNNEL_STATE_OPEN)
+        if (tunnels_cache.tunnels[i]->state != TUNNEL_STATE_OPEN)
         {
-            pick -= tunnels_cache.tunnels[idx]->weight;
+            continue;
         }
+        if (pick < tunnels_cache.tunnels[i]->weight || num_open <= 1)
+        {
+            tunnel = tunnels_cache.tunnels[i];
+            break;
+        }
+        num_open--;
     }
-    tunnel_t tunnel = tunnels_cache.tunnels[idx];
+    if (tunnel == NULL)
+    {
+        return NULL;
+    }
 
     if (repeat != 0)
     {
@@ -696,7 +710,6 @@ static tunnel_t tunnel_get(uint64_t hash, unsigned repeat)
                         tunnel_history[hist_idx].id)
                 {
                     bad_tunnel = tunnels_cache.tunnels[i];
-                    pick -= bad_tunnel->weight;
                     bad_tunnel->weight = bad_tunnel->weight * 0.75;
                     bad_tunnel->weight = (bad_tunnel->weight < 0.005?
                         0.005: bad_tunnel->weight);
