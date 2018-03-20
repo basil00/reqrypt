@@ -31,6 +31,10 @@
 #include "log.h"
 #include "misc.h"
 
+#ifndef CLOCK_MONOTONIC_RAW
+#define CLOCK_MONOTONIC_RAW CLOCK_MONOTONIC
+#endif
+
 /*
  * Initialise a buffer with random data from /dev/urandom
  */
