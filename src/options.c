@@ -1,6 +1,6 @@
 /*
  * options.c
- * (C) 2017, all rights reserved,
+ * (C) 2018, all rights reserved,
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -69,7 +69,7 @@ struct opt_info_s opt_info[] =
     {"help",         OPT_BOOL, &options.seen_help,         NULL},
     {"no-capture",   OPT_BOOL, &options.seen_no_capture,   NULL},
 #ifdef FREEBSD
-    {"no-ipfw",      OPT_BOOL, &options.seen_no_ipfw,      NULL},
+    {"no-pf",        OPT_BOOL, &options.seen_no_pf,        NULL},
 #endif    
 #ifdef LINUX
     {"no-iptables",  OPT_BOOL, &options.seen_no_iptables,  NULL},
@@ -205,9 +205,9 @@ static void help(void)
     puts("\t\tDo not capture and tunnel packets (this option effectively");
     printf("\t\tdisables %s).\n", PROGRAM_NAME);
 #ifdef FREEBSD
-    puts("\t--no-ipfw");
-    printf("\t\tPrevent %s from issuing ipfw commands.\n", PROGRAM_NAME);
-    puts("\t\tUse this option if you wish to configure ipfw manually.");
+    puts("\t--no-pf");
+    printf("\t\tPrevent %s from issuing pf commands.\n", PROGRAM_NAME);
+    puts("\t\tUse this option if you wish to configure pf manually.");
 #endif
 #ifdef LINUX
     puts("\t--no-iptables");

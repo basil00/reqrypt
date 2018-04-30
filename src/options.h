@@ -1,6 +1,6 @@
 /*
  * options.h
- * (C) 2017, all rights reserved,
+ * (C) 2018, all rights reserved,
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -30,7 +30,7 @@ struct options_s
     bool seen_help;
     bool seen_no_capture;
 #ifdef FREEBSD
-    bool seen_no_ipfw;
+    bool seen_no_pf;
 #endif
 #ifdef LINUX
     bool seen_no_iptables;

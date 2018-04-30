@@ -1,6 +1,6 @@
 /*
  * capture.c
- * (C) 2017, all rights reserved,
+ * (C) 2018, all rights reserved,
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,7 +20,7 @@
  * Filtering, packet capture, and re-injection for FreeBSD
  *
  * FILTERING:
- *      Filtering is achieved by issuing ipfw commands to redirect packets 
+ *      Filtering is achieved by issuing pfctl commands to redirect packets 
  *      to IP_DIVERT sockets.
  *
  * CAPTURING/RE-INJECTION:
@@ -46,37 +46,21 @@
 #define DIVERT_PORT     40403
 
 /*
- * IPFW commands.
+ * PFCTL commands.
  */
-#define IPFW_BUFFSIZE   256
-#define IPFW_ARGS_MAX   32
-#ifndef MACOSX
-static const char *ipfw_divert_tcp_1 =
-    "/sbin/ipfw 40404 add divert %d out proto tcp dst-port 443 uid %d";
-static const char *ipfw_divert_tcp_2 =
-    "/sbin/ipfw 40405 add divert %d out proto tcp dst-port 80 uid %d";
-static const char *ipfw_divert_udp =
-    "/sbin/ipfw 40406 add divert %d out proto udp dst-port 53 uid %d";
-#else
-// MACOSX uid is buggy
-static const char *ipfw_divert_tcp_1 =
-    "/sbin/ipfw 40404 add divert %d out proto tcp dst-port 443";
-static const char *ipfw_divert_tcp_2 =
-    "/sbin/ipfw 40405 add divert %d out proto tcp dst-port 80";
-static const char *ipfw_divert_udp =
-    "/sbin/ipfw 40406 add divert %d out proto udp dst-port 53";
-#endif      /* MACOSX */
-static const char *ipfw_filter_icmp =
-    "/sbin/ipfw 40407 add deny in icmptypes 11";
-static const char *ipfw_undo =
-    "/sbin/ipfw delete 40404 40405 40406 40407";
+#define PFCTL_BUFFSIZE   256
+#define PFCTL_ARGS_MAX   32
+static const char *pfctl_divert =
+    "/sbin/pactl -a reqrypt -f ./pf.conf";
+static const char *pfctl_undo =
+    "/sbin/pfctl -a reqrypt -F rules";
 
 /*
  * Prototypes.
  */
-static void ipfw(const char *command);
-static void ipfw_undo_on_signal(int sig);
-static void ipfw_undo_flush(void);
+static void pfctl(const char *command);
+static void pfctl_undo_on_signal(int sig);
+static void pfctl_undo_flush(void);
 
 /*
  * Global divert socket for capture/injection.
@@ -84,9 +68,9 @@ static void ipfw_undo_flush(void);
 static int socket_divert;
 
 /*
- * Cleaned up ipfw state?
+ * Cleaned up pf state?
  */
-static bool ipfw_clean = true;
+static bool pf_clean = true;
 
 /*
  * Initialise packet capturing.
@@ -112,25 +96,22 @@ void init_capture(void)
         error("unable to bind divert socket to port %d", DIVERT_PORT);
     }
 
-    // Initialise packet capture/redirection with ipfw.
+    // Initialise packet capture/redirection with pf.
 #ifndef DEBUG
-    signal(SIGINT, ipfw_undo_on_signal);
-    signal(SIGQUIT, ipfw_undo_on_signal);
-    signal(SIGHUP, ipfw_undo_on_signal);
-    signal(SIGILL, ipfw_undo_on_signal);
-    signal(SIGFPE, ipfw_undo_on_signal);
-    signal(SIGABRT, ipfw_undo_on_signal);
-    signal(SIGSEGV, ipfw_undo_on_signal);
-    signal(SIGTERM, ipfw_undo_on_signal);
-    signal(SIGPIPE, ipfw_undo_on_signal);
-    signal(SIGALRM, ipfw_undo_on_signal);
+    signal(SIGINT, pfctl_undo_on_signal);
+    signal(SIGQUIT, pfctl_undo_on_signal);
+    signal(SIGHUP, pfctl_undo_on_signal);
+    signal(SIGILL, pfctl_undo_on_signal);
+    signal(SIGFPE, pfctl_undo_on_signal);
+    signal(SIGABRT, pfctl_undo_on_signal);
+    signal(SIGSEGV, pfctl_undo_on_signal);
+    signal(SIGTERM, pfctl_undo_on_signal);
+    signal(SIGPIPE, pfctl_undo_on_signal);
+    signal(SIGALRM, pfctl_undo_on_signal);
 #endif      /* DEBUG */
-    ipfw(ipfw_divert_tcp_1);
-    ipfw(ipfw_divert_tcp_2);
-    ipfw(ipfw_divert_udp);
-    ipfw(ipfw_filter_icmp);
-    ipfw_clean = false;
-    atexit(ipfw_undo_flush);
+    pfctl(pfctl_divert);
+    pf_clean = false;
+    atexit(pfctl_undo_flush);
 }
 
 /*
@@ -189,28 +170,28 @@ void inject_packet(uint8_t *buff, size_t size)
 }
 
 /*
- * Execute an ipfw command.
+ * Execute an pfctl command.
  */
-static void ipfw(const char *command)
+static void pfctl(const char *command)
 {
-    if (options_get()->seen_no_ipfw)
+    if (options_get()->seen_no_pf)
     {
         return;
     }
 
-    char buff[IPFW_BUFFSIZE];
+    char buff[PFCTL_BUFFSIZE];
     if (snprintf(buff, sizeof(buff), command, DIVERT_PORT, getuid()) >=
             sizeof(buff))
     {
-        panic("ipfw buffer is too small");
+        panic("pfctl buffer is too small");
     }
-    log("[" PLATFORM "] executing ipfw command \"%s\"", buff);
+    log("[" PLATFORM "] executing pfctl command \"%s\"", buff);
 
     // Note: never use system() because we have setuid as root.
-    char *args[IPFW_ARGS_MAX];
+    char *args[PFCTL_ARGS_MAX];
     args[0] = buff;
     int i, j;
-    for (i = 0, j = 1; buff[i] && j < IPFW_ARGS_MAX-1; i++)
+    for (i = 0, j = 1; buff[i] && j < PFCTL_ARGS_MAX-1; i++)
     {
         if(buff[i] == ' ')
         {
@@ -226,21 +207,21 @@ static void ipfw(const char *command)
     pid_t pid = fork();
     if (pid == -1)
     {
-        error("unable to execute ipfw command; failed to fork current "
+        error("unable to execute pfctl command; failed to fork current "
             "process");
     }
     else if (pid == 0)
     {
         if (setgid(0) != 0)
         {
-            error("unable to set the group ID to 0 (root) for ipfw command");
+            error("unable to set the group ID to 0 (root) for pfctl command");
         }
         if (setuid(0) != 0)
         {
-            error("unable to set the user ID to 0 (root) for ipfw command");
+            error("unable to set the user ID to 0 (root) for pfctl command");
         }
-        execv("/sbin/ipfw", args);
-        error("unable to execute ipfw command");
+        execv("/sbin/pfctl", args);
+        error("unable to execute pfctl command");
     }
 
     int exit_status;
@@ -248,35 +229,35 @@ static void ipfw(const char *command)
     {
         if (errno != EINTR)
         {
-            error("unable to execute ipfw command; failed to wait for ipfw "
+            error("unable to execute pfctl command; failed to wait for pfctl "
                 "to complete");
         }
     }
     if(exit_status != 0)
     {
-        error("ipfw command returned non-zero exit status %d", exit_status);
+        error("pfctl command returned non-zero exit status %d", exit_status);
     }
 }
 
 /*
- * Undo ipfw commands on signal then exit.
+ * Undo pfctl commands on signal then exit.
  */
-static void ipfw_undo_on_signal(int sig)
+static void pfctl_undo_on_signal(int sig)
 {
-    log("[" PLATFORM "] caught deadly signal %d; cleaning up ipfw state", sig);
-    ipfw_undo_flush();
+    log("[" PLATFORM "] caught deadly signal %d; cleaning up pf state", sig);
+    pfctl_undo_flush();
     error("caught deadly signal %d; exitting", sig);
 }
 
 /*
- * Undo ipfw commands.
+ * Undo pfctl commands.
  */
-static void ipfw_undo_flush(void)
+static void pfctl_undo_flush(void)
 {
-    if (!ipfw_clean)
+    if (!pf_clean)
     {
-        ipfw(ipfw_undo);
-        ipfw_clean = true;
+        pfctl(pfctl_undo);
+        pf_clean = true;
     }
 }
 
