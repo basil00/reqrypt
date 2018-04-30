@@ -114,7 +114,7 @@ static void install_file(const char *keyname, const char *filename, bool force)
         warning("unable to install file \"%s\"", filename);
         return;
     }
-    fputs(data->buff.buff, file);
+    fputs(data->data, file);
     fclose(file);
     return;
 }

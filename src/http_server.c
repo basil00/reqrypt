@@ -89,7 +89,9 @@ static http_buffer_t http_lookup_static_data(const char *name)
         return NULL;
     }
     http_buffer_t buff = http_buffer_open();
-    memmove(buff, &data->buff, sizeof(struct http_buffer_s));
+    buff->size = strlen(data->data);
+    buff->put_pos = buff->size;
+    buff->buff = (char *)data->data;
     return buff;
 }
 

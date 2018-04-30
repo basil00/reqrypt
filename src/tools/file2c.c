@@ -1,6 +1,6 @@
 /*
  * file2c.c
- * (C) 2017, all rights reserved,
+ * (C) 2018, all rights reserved,
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -120,6 +120,7 @@ int main(int argc, char **argv)
             printf("\t0x%.2X,\n", c & 0xFF);
         }
         fclose(file);
+        fputs("\t0x00\n", stdout);
         fputs("};\n", stdout);
         fputs("#endif\n\n", stdout);
     }
@@ -128,7 +129,7 @@ int main(int argc, char **argv)
     fputs("struct file_data_s\n", stdout);
     fputs("{\n", stdout);
     fputs("\tconst char *name;\n", stdout);
-    fputs("\tconst struct http_buffer_s buff;\n", stdout);
+    fputs("\tconst char *data;\n", stdout);
     fputs("};\n", stdout);
     fputs("static int file_data_s_compare(const void *a, const void *b)\n",
         stdout);
@@ -144,13 +145,9 @@ int main(int argc, char **argv)
     {
         fputs("#ifndef SKIP_", stdout);
         print_symbol(argv[i]);
-        printf("\n\t{\"%s\", {false, 0, sizeof(", argv[i]);
+        printf("\n\t{\"%s\", ", argv[i]);
         print_symbol(argv[i]);
-        fputs("), sizeof(", stdout);
-        print_symbol(argv[i]);
-        fputs("), (char *)", stdout);
-        print_symbol(argv[i]);
-        fputs("}},\n", stdout);
+        fputs("},\n", stdout);
         fputs("#endif\n", stdout);
     }
     fputs("};\n", stdout);
