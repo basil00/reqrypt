@@ -39,5 +39,8 @@ void quit(int status) __attribute__((noreturn));
 #ifndef WINDOWS
 #define BROWSER_FILENAME            PROGRAM_NAME ".browser.sh"
 #endif
+#ifdef FREEBSD
+#define PFCONF_FILENAME             PROGRAM_NAME ".pf.conf"
+#endif
 
 #endif      /* __MISC_H */

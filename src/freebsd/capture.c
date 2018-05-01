@@ -46,14 +46,19 @@
 #define DIVERT_PORT     40403
 
 /*
+ * Anchorname
+ */
+#define ANCHOR          PROGRAM_NAME
+
+/*
  * PFCTL commands.
  */
 #define PFCTL_BUFFSIZE   256
 #define PFCTL_ARGS_MAX   32
 static const char *pfctl_divert =
-    "/sbin/pactl -a reqrypt -f ./pf.conf";
+    "/sbin/pactl -a " ANCHOR " -f " PFCONF_FILENAME;
 static const char *pfctl_undo =
-    "/sbin/pfctl -a reqrypt -F rules";
+    "/sbin/pfctl -a " ANCHOR " -F rules";
 
 /*
  * Prototypes.

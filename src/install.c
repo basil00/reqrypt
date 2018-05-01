@@ -33,6 +33,9 @@
 #ifdef WINDOWS
 #define SKIP_data_install_browser_sh    1
 #endif
+#ifndef FREEBSD
+#define SKIP_data_install_pf_conf       1
+#endif
 
 #include "install_data.c"
 
@@ -72,6 +75,9 @@ void install_files(void)
 #ifndef WINDOWS
     install_file("install.browser.sh", BROWSER_FILENAME, force);
 #endif /* WINDOWS */
+#ifdef FREEBSD
+    install_file("install.pf.conf", PFCONF_FILENAME, force);
+#endif /* FREEBSD */
 }
 
 /*
