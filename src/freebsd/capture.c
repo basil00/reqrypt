@@ -37,6 +37,7 @@
 
 #include "capture.h"
 #include "log.h"
+#include "misc.h"
 #include "options.h"
 #include "socket.h"
 
