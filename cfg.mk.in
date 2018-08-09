@@ -1,5 +1,5 @@
-ROOT                  = @ROOT@
-TOOLS                 = @ROOT@/tools/
+ROOT                  = "@ROOT@"
+TOOLS                 = "@ROOT@/tools/"
 PLATFORM              = @PLATFORM@
 CLIENT_PROG           = @PACKAGE_NAME@
 SERVER_PROG           = @PACKAGE_NAME@d
@@ -11,14 +11,14 @@ PACKAGE_VERSION_SHORT = @PACKAGE_VERSION_SHORT@
 BITS                  = @BITS@
 ARCH                  = @ARCH@
 CC                    = @CC@
-CLIENT_CFLAGS         = -DCLIENT -D@PLATFORM_CAPS@ -maes -Wall -O2 -I @ROOT@/src/
-SERVER_CFLAGS         = -DSERVER -DLINUX -Wall -maes -O2 -I @ROOT@/src/
-CTOOL_CFLAGS          = -DTOOL -DLINUX -Wall -maes -O2 -I @ROOT@/src/
+CLIENT_CFLAGS         = -DCLIENT -D@PLATFORM_CAPS@ -maes -Wall -O2 -I "@ROOT@/src/"
+SERVER_CFLAGS         = -DSERVER -DLINUX -Wall -maes -O2 -I "@ROOT@/src/"
+CTOOL_CFLAGS          = -DTOOL -DLINUX -Wall -maes -O2 -I "@ROOT@/src/"
 CLIENT_DEBUG_CFLAGS   = -DCLIENT -D@PLATFORM_CAPS@ -DDEBUG -maes -Wall -O0 -g \
-                            -I @ROOT@/src/
+                            -I "@ROOT@/src/"
 SERVER_DEBUG_CFLAGS   = -DSERVER -DLINUX -DDEBUG -maes -Wall -O0 -g \
-                            -I @ROOT@/src/
-CTOOL_DEBUG_CFLAGS    = -DTOOL -DLINUX -DDEBUG -maes -Wall -O0 -g -I @ROOT@/src/
+                            -I "@ROOT@/src/"
+CTOOL_DEBUG_CFLAGS    = -DTOOL -DLINUX -DDEBUG -maes -Wall -O0 -g -I "@ROOT@/src/"
 CLIENT_CLIBS          = -lpthread
 SERVER_CLIBS          = -lgmp -lpthread
 CTOOL_CLIBS           = -lssl -lcrypto
