@@ -130,6 +130,7 @@ int main(int argc, char **argv)
     fputs("{\n", stdout);
     fputs("\tconst char *name;\n", stdout);
     fputs("\tconst char *data;\n", stdout);
+    fputs("\tsize_t size;\n", stdout);
     fputs("};\n", stdout);
     fputs("static int file_data_s_compare(const void *a, const void *b)\n",
         stdout);
@@ -147,7 +148,9 @@ int main(int argc, char **argv)
         print_symbol(argv[i]);
         printf("\n\t{\"%s\", ", argv[i]);
         print_symbol(argv[i]);
-        fputs("},\n", stdout);
+        fputs(", sizeof(", stdout);
+        print_symbol(argv[i]);
+        fputs(")-1},\n", stdout);
         fputs("#endif\n", stdout);
     }
     fputs("};\n", stdout);
