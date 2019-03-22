@@ -1,0 +1,13 @@
+[Unit]
+Description=ReQrypt Client
+After=network.target
+
+[Service]
+Type=simple
+User=root
+PIDFile=/run/reqrypt.pid
+ExecStart=/usr/bin/reqrypt --no-launch-ui
+ExecStop=/bin/kill -s INT $MAINPID
+
+[Install]
+WantedBy=multi-user.target

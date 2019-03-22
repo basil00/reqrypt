@@ -40,6 +40,8 @@ mkdir -p root
 cd root
 mkdir -p "./usr/sbin/"
 cp "../../${PACKAGE_NAME}" "./usr/sbin/"
+mkdir -p "./usr/lib/systemd/system/"
+cp "../reqrypt.service" "./usr/lib/systemd/system/"
 tar cz --owner root --group root -f ../data.tar.gz .
 md5sum `find ../root/ -type f -printf "%P "` > md5sums
 mv md5sums ../client.deb/
